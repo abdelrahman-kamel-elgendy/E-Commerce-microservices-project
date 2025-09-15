@@ -12,7 +12,7 @@ A backend E-Commerce platform built with Java Spring Boot, PostgreSQL, and Micro
 - **Payment Service**: Simulated payment gateway integration
 - **Notification Service**: Email/SMS notifications for order updates
 - **API Gateway**: Single entry point for all services
-- **Service Discovery**: Dynamic service registration & discovery with Eureka
+- **Registery Service**: Dynamic service registration & discovery with Eureka
 - **Database**: PostgreSQL (separate schema per service)
 - **Security**: Spring Security + JWT
 
@@ -20,7 +20,7 @@ A backend E-Commerce platform built with Java Spring Boot, PostgreSQL, and Micro
 
 - **Backend**: Spring Boot (REST APIs, Microservices)
 - **Database**: PostgreSQL
-- **Service Discovery**: Spring Cloud Netflix Eureka
+- **Registery Service**: Spring Cloud Netflix Eureka
 - **API Gateway**: Spring Cloud Gateway
 
 ## Repository Structure
@@ -35,5 +35,5 @@ ecommerce-microservices/
  ├── payment-service/
  ├── notification-service/
  ├── gateway-service/      # API Gateway
- └── discovery-service/    # Eureka Server
+ └── registery-service/    # Eureka Server
 ```
