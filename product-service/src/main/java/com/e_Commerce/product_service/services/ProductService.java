@@ -27,7 +27,6 @@ public class ProductService {
         product.setName(dto.getName());
         product.setDescription(dto.getDescription());
         product.setPrice(dto.getPrice());
-        product.setQuantity(dto.getQuantity());
         product.setCategoryId(dto.getCategoryId());
 
         product.setUpdatedAt(Instant.now());
