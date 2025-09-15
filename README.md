@@ -30,4 +30,4 @@ ecommerce-microservices/
  ├── payment-service/
  ├── notification-service/
  ├── gateway-service/      # API Gateway
- ├── discovery-service/    # Eureka Server
+ └── discovery-service/    # Eureka Server
