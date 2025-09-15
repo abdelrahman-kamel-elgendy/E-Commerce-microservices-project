@@ -8,9 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.e_Commerce.product_service.dtos.ApiResponse;
 import com.e_Commerce.product_service.dtos.ProductDto;
 import com.e_Commerce.product_service.models.Product;
+import com.e_Commerce.product_service.res.ApiResponse;
 import com.e_Commerce.product_service.services.ProductService;
 
 import jakarta.validation.Valid;
