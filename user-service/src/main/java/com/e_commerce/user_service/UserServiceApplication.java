@@ -42,7 +42,7 @@ public class UserServiceApplication {
                 admin.setFirstName(adminFirstName);
                 admin.setLastName(adminLastName);
                 userRepository.save(admin);
-                System.out.println("Admin user created! ");
+                System.out.println("Admin user created!");
             }
 			else {
 				System.out.println("Admin user already exists.");
