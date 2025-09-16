@@ -1,6 +1,7 @@
 package com.e_Commerce.product_service.controllers;
 
 import java.util.List;
+import java.util.Locale.Category;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -8,9 +9,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.e_Commerce.product_service.dtos.ProductDetails;
 import com.e_Commerce.product_service.dtos.ProductDto;
+import com.e_Commerce.product_service.feigns.InventoryFeign;
 import com.e_Commerce.product_service.models.Product;
 import com.e_Commerce.product_service.res.ApiResponse;
+import com.e_Commerce.product_service.services.CategoryService;
 import com.e_Commerce.product_service.services.ProductService;
 
 import jakarta.validation.Valid;
@@ -31,13 +35,27 @@ public class ProductController {
     @Autowired
     ProductService productService;
 
+    @Autowired
+    CategoryService categoryService;
+
+    @Autowired
+    InventoryFeign inventoryFeign;
+
     @PostMapping
-    public ResponseEntity<ApiResponse<Product>> createProduct(@Valid @RequestBody ProductDto dto) {
+    public ResponseEntity<ApiResponse<ProductDetails>> createProduct(@Valid @RequestBody ProductDto dto) {
+        Product product = productService.createProduct(dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            new ApiResponse<Product>(
+            new ApiResponse<ProductDetails>(
                 true, 
                 "Product created successfully", 
-                productService.createProduct(dto)
+                new ProductDetails(
+                    product.getId(),
+                    product.getName(),
+                    product.getName(), 
+                    product.getPrice(), 
+                    categoryService.getCategoryById(product.getCategoryId()).getName(), 
+                    inventoryFeign.getInventoryByProductId(product.getId()).getBody().getData().getQuantity(),
+                    product.getImageUrl())
             )
         );
     }

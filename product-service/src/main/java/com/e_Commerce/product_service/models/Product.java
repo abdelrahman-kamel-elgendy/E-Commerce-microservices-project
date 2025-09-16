@@ -34,7 +34,6 @@ public class Product {
     private String name;
     private String description;
     private BigDecimal price;
-    private int quantity;
     private String imageUrl;
     
     private Long categoryId;
@@ -54,7 +53,6 @@ public class Product {
         this.name = dto.getName();
         this.description = dto.getDescription();
         this.price = dto.getPrice();
-        this.quantity = dto.getQuantity();
         this.categoryId = dto.getCategoryId();
         this.imageUrl = dto.getImageUrl();
     }
