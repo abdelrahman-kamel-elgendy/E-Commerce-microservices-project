@@ -21,6 +21,10 @@ public class ProductDto {
     @Positive(message = "Price must be a positive number!")
     private BigDecimal price;
 
+    @NotNull(message = "Quantity is required!")
+    @Positive(message = "Quantity must be a positive number!")
+    private int quantity; 
+
     @NotNull(message = "Category ID is required!")
     @Positive(message = "Category ID must be a positive number!")
     private Long categoryId;

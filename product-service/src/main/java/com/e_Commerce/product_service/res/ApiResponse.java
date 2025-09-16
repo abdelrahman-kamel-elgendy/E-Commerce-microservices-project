@@ -5,11 +5,13 @@ import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@AllArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class ApiResponse<T> {
     private boolean success;
     private String message;
@@ -23,7 +25,7 @@ public class ApiResponse<T> {
         this.data = data;
         this.timestamp = LocalDateTime.now();
         
-        if (data == null) 
+        if (!success)   
             this.count = 0;
         else if (data instanceof List) 
             this.count = ((List<?>) data).size();

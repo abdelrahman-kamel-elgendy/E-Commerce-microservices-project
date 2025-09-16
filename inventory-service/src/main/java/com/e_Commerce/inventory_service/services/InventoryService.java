@@ -19,6 +19,14 @@ public class InventoryService {
         return inventoryRepository.save(new Inventory(productId, quantity));
     }
 
+    public Inventory updateStock(Long productId, int quantity) {
+        Inventory inventory = this.getInventoryByProductId(productId);
+
+        inventory.setQuantity(quantity);
+        return inventoryRepository.save(inventory);
+    }
+
+
     public List<Inventory> getAllInventories() {
         return inventoryRepository.findAll();
     }
@@ -28,13 +36,8 @@ public class InventoryService {
             .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inventory with product id: "+ productId + " not found"));
     }
 
-    public Inventory getInventoryById(Long id) {
-        return inventoryRepository.findById(id)
-            .orElseThrow(()-> new ResponseStatusException(HttpStatus.NOT_FOUND, "Inventory with id: "+ id + " not found"));
-    }
-
-    public Inventory deleteInventory(Long id) {
-        Inventory inventory = this.getInventoryById(id);
+    public Inventory deleteInventory(Long productId) {
+        Inventory inventory = this.getInventoryByProductId(productId);
         inventoryRepository.delete(inventory);
         return inventory;
     }
@@ -43,14 +46,14 @@ public class InventoryService {
         return this.getInventoryByProductId(productId).getQuantity() >= quantity; 
     }
 
-    public Inventory reduceStock(Long productId, int quantity) {
+    public Inventory decrease(Long productId, int quantity) {
         Inventory inventory = this.getInventoryByProductId(productId);
-        int inventoryQuantity = inventory.getQuantity();
 
-        if(inventoryQuantity < quantity)
+        if(inventory.getQuantity() < quantity)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough stock to fulfill the order");
 
-        inventory.setQuantity(inventoryQuantity - quantity);
+        inventory.setQuantity(quantity);
         return inventoryRepository.save(inventory);
     }
+
 }

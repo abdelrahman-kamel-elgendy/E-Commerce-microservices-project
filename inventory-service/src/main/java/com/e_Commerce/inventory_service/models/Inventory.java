@@ -23,7 +23,7 @@ public class Inventory {
     @Column(name = "product_id", updatable = false ,nullable = false, unique = true)
     private Long productId;
 
-    @Column(name = "quantity", updatable = false ,nullable = false)
+    @Column(name = "quantity", nullable = false)
     private int quantity;
 
     public Inventory(Long productId, int quantity) {

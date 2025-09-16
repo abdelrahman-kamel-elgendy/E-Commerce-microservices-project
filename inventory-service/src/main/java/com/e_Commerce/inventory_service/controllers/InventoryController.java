@@ -19,6 +19,7 @@ import com.e_Commerce.inventory_service.services.InventoryService;
 import org.springframework.web.bind.annotation.PutMapping;
 
 
+
 @RestController
 @RequestMapping("/api/inventories")
 public class InventoryController {
@@ -26,12 +27,26 @@ public class InventoryController {
     InventoryService inventoryService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Inventory>> createInventory(@RequestParam Long productId, @RequestParam Integer quantity) {
+    public ResponseEntity<ApiResponse<Inventory>> createInventory(@RequestParam Long productId, @RequestParam int quantity) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
             new ApiResponse<Inventory>(
                 true, 
                 "Inventory created successfully", 
                 inventoryService.createInventory(productId, quantity)
+            )
+        );
+    }
+
+    @PutMapping
+    public ResponseEntity<ApiResponse<Inventory>> updateStok(@RequestParam Long productId, @RequestParam int quantity) {
+        return ResponseEntity.ok(
+            new ApiResponse<Inventory>(
+                true,
+                "Inventory increased successfully",
+                inventoryService.updateStock(
+                    productId, 
+                    quantity
+                )
             )
         );
     }
@@ -47,27 +62,28 @@ public class InventoryController {
         );
     }
 
-    @GetMapping("/product/{productId}")
-    public ResponseEntity<ApiResponse<Inventory>> getInventoryByProductId(@PathVariable Long productId) {
-        return ResponseEntity.ok(
-            new ApiResponse<Inventory>(
-                true, 
-                "Inventory retrieved successfully", 
-                inventoryService.getInventoryByProductId(productId)
-            )
-        );
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Inventory>> deleteInventory(@PathVariable Long id) {
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<Inventory>> deleteInventory(@RequestParam Long productId) {
         return ResponseEntity.ok(
             new ApiResponse<Inventory>(
                 true, 
                 "Inventory deleted successfully", 
-                inventoryService.deleteInventory(id)
+                inventoryService.deleteInventory(productId)
             )  
         );
     }
+
+    @GetMapping("/productId")
+    public ResponseEntity<ApiResponse<Inventory>> getInventoryByProductId(@RequestParam Long productId) {
+        return ResponseEntity.ok(
+            new ApiResponse<Inventory>(
+                true, 
+                "Inventory retrieved successfully",
+                inventoryService.getInventoryByProductId(productId)
+            )
+        );
+    }
+    
 
     @GetMapping("/check")
     public ResponseEntity<ApiResponse<Boolean>> checkQuantityAvilablity(@RequestParam Long productId, @RequestParam int quantity) {
@@ -78,15 +94,18 @@ public class InventoryController {
                 inventoryService.checkQuantityAvailability(productId, quantity)
             )
         );
-    }
-    
-    @PutMapping("/reduce")
-    public ResponseEntity<ApiResponse<Inventory>> reduceStock(@RequestParam Long productId, @RequestParam int quantity) {
+    }    
+        
+    @PutMapping("/decrease")
+    public ResponseEntity<ApiResponse<Inventory>> decreaseStock(@RequestParam Long productId, @RequestParam int quantity) {
         return ResponseEntity.ok(
             new ApiResponse<Inventory>(
                 true,
                 "Inventory reduced successfully",
-                inventoryService.reduceStock(productId, quantity)
+                inventoryService.decrease(
+                    productId, 
+                    quantity
+                )
             )
         );
     }

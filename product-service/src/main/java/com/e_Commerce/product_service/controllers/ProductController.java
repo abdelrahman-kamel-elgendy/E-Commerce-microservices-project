@@ -6,8 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
+import com.e_Commerce.product_service.dtos.Inventory;
 import com.e_Commerce.product_service.dtos.ProductDetails;
 import com.e_Commerce.product_service.dtos.ProductDto;
 import com.e_Commerce.product_service.feigns.InventoryFeign;
@@ -43,6 +46,11 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<ApiResponse<ProductDetails>> createProduct(@Valid @RequestBody ProductDto dto) {
         Product product = productService.createProduct(dto);
+        ResponseEntity<ApiResponse<Inventory>> inventoryResponse = inventoryFeign.createInventory(product.getId(), dto.getQuantity()); 
+        
+        if(!inventoryResponse.getBody().isSuccess())
+            productService.deleteProduct(product.getId());  
+        
         return ResponseEntity.status(HttpStatus.CREATED).body(
             new ApiResponse<ProductDetails>(
                 true, 
@@ -52,20 +60,32 @@ public class ProductController {
                     product.getName(),
                     product.getName(), 
                     product.getPrice(), 
-                    categoryService.getCategoryById(product.getCategoryId()).getName(), 
-                    inventoryFeign.getInventoryByProductId(product.getId()).getBody().getData().getQuantity(),
-                    product.getImageUrl())
+                    categoryService.getCategoryById(product.getCategoryId()).getName(),
+                    inventoryResponse.getBody().getData().getQuantity(),
+                    product.getImageUrl()
+                )
             )
         );
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<ApiResponse<Product>> updateProduct(@PathVariable Long id,  @Valid @RequestBody ProductDto dto) {
+    public ResponseEntity<ApiResponse<ProductDetails>> updateProduct(@PathVariable Long id,  @Valid @RequestBody ProductDto dto) {
+        Product product = productService.updateProduct(id, dto);
+        Inventory inventory = inventoryFeign.updateStok(id, dto.getQuantity()).getBody().getData();
+
         return ResponseEntity.ok(
-            new ApiResponse<Product>(
+            new ApiResponse<ProductDetails>(
                 true, 
                 "Product updated successfully", 
-                productService.updateProduct(id, dto)
+                new ProductDetails(
+                    product.getId(), 
+                    product.getName(), 
+                    product.getDescription(), 
+                    product.getPrice(), 
+                    categoryService.getCategoryById(product.getCategoryId()).getName(),
+                    inventory.getQuantity(),
+                    product.getImageUrl()
+                )
             )
         );
     }
@@ -80,34 +100,48 @@ public class ProductController {
         );
     }
 
-    @GetMapping("/active")
-    public ResponseEntity<ApiResponse<List<Product>>> getAllActiveProducts() {
-        return ResponseEntity.ok(new ApiResponse<List<Product>>(
-            true, 
-            "Products retrieved successfully", 
-            productService.getAllActiveProducts()
-            )
-        );
-    }
-
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Product>> getProductById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ProductDetails>> getProductById(@PathVariable Long id) {
+        Product product = productService.getProductById(id);
+        Inventory inventory = inventoryFeign.getInventoryByProductId(product.getId()).getBody().getData();
+
         return ResponseEntity.ok(
-            new ApiResponse<Product>(
+            new ApiResponse<ProductDetails>(
                 true, 
                 "Product retrieved successfully", 
-                productService.getProductById(id)
+                new ProductDetails(
+                    product.getId(), 
+                    product.getName(), 
+                    product.getDescription(), 
+                    product.getPrice(), 
+                    categoryService.getCategoryById(product.getCategoryId()).getName(),
+                    inventory.getQuantity(),
+                    product.getImageUrl()
+                )
             )
         );
     }
     
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Product>> deleteProduct(@PathVariable Long id) {
+        inventoryFeign.deleteInventory(id);
+
         return ResponseEntity.ok(
             new ApiResponse<Product> (
                 true,
                 "Product deleted successfully",
                 productService.deleteProduct(id)
+            )
+        );
+    }
+
+    
+    @GetMapping("/active")
+    public ResponseEntity<ApiResponse<List<Product>>> getAllActiveProducts() {
+        return ResponseEntity.ok(new ApiResponse<List<Product>>(
+            true, 
+            "Products retrieved successfully", 
+            productService.getAllActiveProducts()
             )
         );
     }
