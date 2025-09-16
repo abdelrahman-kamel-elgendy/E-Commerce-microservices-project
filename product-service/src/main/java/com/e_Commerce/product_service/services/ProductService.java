@@ -10,19 +10,13 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.e_Commerce.product_service.dtos.ProductDto;
 import com.e_Commerce.product_service.models.Product;
-import com.e_Commerce.product_service.repositories.CategoryRepository;
 import com.e_Commerce.product_service.repositories.ProductRepository;
 
 @Service
 public class ProductService {
 
-    private final CategoryRepository categoryRepository;
     @Autowired
     ProductRepository productRepository;
-
-    ProductService(CategoryRepository categoryRepository) {
-        this.categoryRepository = categoryRepository;
-    }
 
     public Product createProduct(ProductDto dto) {
         return productRepository.save(new Product(dto));
