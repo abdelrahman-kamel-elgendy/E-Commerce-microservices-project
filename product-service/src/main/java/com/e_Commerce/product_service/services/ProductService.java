@@ -59,6 +59,4 @@ public class ProductService {
         product.setUpdatedAt(Instant.now());
         return productRepository.save(product);
     }
-
-
 }
