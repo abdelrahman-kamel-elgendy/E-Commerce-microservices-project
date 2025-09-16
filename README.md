@@ -10,7 +10,7 @@ A backend E-Commerce platform built with Java Spring Boot, PostgreSQL, and Micro
 - **Cart Service**: Add/remove/update items in shopping cart
 - **Order Service**: Checkout, order history, order status tracking
 - **Payment Service**: Simulated payment gateway integration
-- **Notification Service**: Email/SMS notifications for order updates
+- **Notification Service**: Email notifications for order updates
 - **API Gateway**: Single entry point for all services
 - **Registery Service**: Dynamic service registration & discovery with Eureka
 - **Database**: PostgreSQL (separate schema per service)
