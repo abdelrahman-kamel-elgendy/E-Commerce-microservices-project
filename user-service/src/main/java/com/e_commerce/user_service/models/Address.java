@@ -1,6 +1,5 @@
 package com.e_commerce.user_service.models;
 
-import java.sql.Date;
 import java.time.Instant;
 
 import jakarta.persistence.*;
