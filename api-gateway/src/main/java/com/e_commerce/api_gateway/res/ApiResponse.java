@@ -23,7 +23,7 @@ public class ApiResponse<T> {
         this.data = data;
         this.timestamp = LocalDateTime.now();
         
-        if (data == null) 
+        if (!success)   
             this.count = 0;
         else if (data instanceof List) 
             this.count = ((List<?>) data).size();
