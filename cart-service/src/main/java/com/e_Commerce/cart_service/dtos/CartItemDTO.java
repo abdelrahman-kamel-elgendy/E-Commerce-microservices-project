@@ -1,0 +1,28 @@
+package com.e_Commerce.cart_service.dtos;
+
+import java.math.BigDecimal;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Setter
+@Getter
+public class CartItemDTO {
+    private Long id;
+    private Long productId;
+    private String productName;
+    private BigDecimal unitPrice;
+    private Integer quantity;
+    private BigDecimal totalPrice;
+    private String productImageUrl;
+
+    public CartItemDTO(Long id, int quantity, ProductDetails product) {
+        this.id = id;
+        this.productId = product.getId(); 
+        this.productName = product.getName();
+        this.unitPrice = product.getPrice();
+        this.quantity = quantity;
+        this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
+        this.productImageUrl = product.getImageUrl();
+    }
+}

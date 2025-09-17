@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.e_Commerce.product_service.dtos.Inventory;
@@ -98,8 +99,18 @@ public class ProductController {
         );
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductDetails>> getProductById(@PathVariable Long id) {
+    @GetMapping("/active")
+    public ResponseEntity<ApiResponse<List<Product>>> getAllActiveProducts() {
+        return ResponseEntity.ok(new ApiResponse<List<Product>>(
+            true, 
+            "Products retrieved successfully", 
+            productService.getAllActiveProducts()
+            )
+        );
+    }
+
+    @GetMapping("/id")
+    public ResponseEntity<ApiResponse<ProductDetails>> getProductById(@RequestParam Long id) {
         Product product = productService.getProductById(id);
         Inventory inventory = inventoryFeign.getInventoryByProductId(product.getId()).getBody().getData();
 
@@ -134,16 +145,7 @@ public class ProductController {
     }
 
     
-    @GetMapping("/active")
-    public ResponseEntity<ApiResponse<List<Product>>> getAllActiveProducts() {
-        return ResponseEntity.ok(new ApiResponse<List<Product>>(
-            true, 
-            "Products retrieved successfully", 
-            productService.getAllActiveProducts()
-            )
-        );
-    }
-
+    
     @PutMapping("/deactivate/{id}")
     public ResponseEntity<ApiResponse<Product>> deactivateProduct(@PathVariable Long id) {
         return ResponseEntity.ok(

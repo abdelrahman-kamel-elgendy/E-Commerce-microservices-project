@@ -1,0 +1,37 @@
+package com.e_Commerce.cart_service.dtos;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+
+import com.e_Commerce.cart_service.models.Cart;
+import com.e_Commerce.cart_service.models.CartStatus;
+
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+public class CartDTO {
+    private Long id;
+    private Long userId;
+    private CartStatus status;
+    private BigDecimal totalAmount = BigDecimal.ZERO;
+    private Integer itemCount;
+    private Instant createdAt;
+    private Instant updatedAt;
+    private List<CartItemDTO> items;
+
+    public CartDTO(Cart cart,  List<CartItemDTO> items) {
+        this.id = cart.getId();
+        this.userId = cart.getUserId();
+        this.status = cart.getStatus();
+        this.items = items;
+        this.itemCount = cart.getItemCount();
+        this.createdAt = cart.getCreatedAt();
+        this.updatedAt = cart.getUpdatedAt();
+
+        for (CartItemDTO cartItemDTO : items)
+            this.totalAmount = this.totalAmount.add(cartItemDTO.getTotalPrice());
+    }
+}

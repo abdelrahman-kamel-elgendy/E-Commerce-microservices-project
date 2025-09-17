@@ -97,6 +97,8 @@ public class CategoryController {
         );
     }
 
+
+    
     @PutMapping("/deactivate/{id}")
     public ResponseEntity<ApiResponse<Category>> deactivateCategory(@PathVariable Long id) {
         return ResponseEntity.ok(

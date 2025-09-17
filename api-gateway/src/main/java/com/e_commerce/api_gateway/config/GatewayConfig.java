@@ -28,11 +28,16 @@ public class GatewayConfig {
                 .route("product-service-products", r -> r.path("/api/products/**")
                         .uri("lb://product-service"))
                 
-                        .route("product-service-categories", r -> r.path("/api/products/**")
+                        .route("product-service-categories", r -> r.path("/api/categories/**")
                         .uri("lb://product-service"))
 
-                .route("inventory-service-inventories", r -> r.path("/api/inventories/**")
+
+                .route("inventory-service", r -> r.path("/api/inventories/**")
                         .uri("lb://inventory-service"))
+
+
+                .route("cart-service", r -> r.path("/api/carts/**")
+                        .uri("lb://cart-service"))
                         
                 .build();
     }
