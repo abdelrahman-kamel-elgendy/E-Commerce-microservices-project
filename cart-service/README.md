@@ -60,7 +60,7 @@ DELETE /api/carts/{cartId}/items - Clear all items from cart
 ```
 cart-service/
 ├── controller/      # REST API controllers
-├── dto/            # Data Transfer Objects
+├── dtos/            # Data Transfer Objects
 ├── errors/       # Custom exception handling
 ├── model/          # JPA entities
 ├── repository/      # Data access layer

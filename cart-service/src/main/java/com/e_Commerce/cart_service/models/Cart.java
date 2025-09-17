@@ -1,6 +1,5 @@
 package com.e_Commerce.cart_service.models;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
