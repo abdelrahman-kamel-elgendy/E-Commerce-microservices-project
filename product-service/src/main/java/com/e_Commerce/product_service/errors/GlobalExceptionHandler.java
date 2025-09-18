@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.e_Commerce.product_service.res.ApiResponse;
+import com.e_Commerce.product_service.dtos.response.ApiResponse;
 
 
 @ControllerAdvice

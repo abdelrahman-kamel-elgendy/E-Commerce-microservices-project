@@ -1,61 +1,31 @@
 package com.e_Commerce.product_service.services;
 
-import java.time.Instant;
+import java.math.BigDecimal;
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
-import com.e_Commerce.product_service.dtos.ProductDto;
-import com.e_Commerce.product_service.models.Product;
-import com.e_Commerce.product_service.repositories.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-@Service
-public class ProductService {
+import com.e_Commerce.product_service.dtos.request.ProductCreateRequest;
+import com.e_Commerce.product_service.dtos.request.ProductUpdateRequest;
+import com.e_Commerce.product_service.dtos.response.ProductResponse;
 
-    @Autowired
-    ProductRepository productRepository;
-
-    public Product createProduct(ProductDto dto) {
-        return productRepository.save(new Product(dto));
-    }
-
-    public Product updateProduct(Long id, ProductDto dto) {
-        Product product = this.getProductById(id);
-
-        product.setName(dto.getName());
-        product.setDescription(dto.getDescription());
-        product.setPrice(dto.getPrice());
-        product.setCategoryId(dto.getCategoryId());
-
-        return productRepository.save(product);
-    }
-
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
-    }
-
-    public List<Product> getAllActiveProducts() {
-        return productRepository.findAllByActive(true);
-    }
-
-    public Product getProductById(Long id) {
-        return productRepository.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product with id " + id + " not found"));
-    }
-
-    public Product deleteProduct(Long id) {
-        Product product = this.getProductById(id);
-        productRepository.delete(product);
-        return product;
-    }
-
-    public Product ProductActivation(Long id, boolean active) {
-        Product product = this.getProductById(id);
-        product.setActive(active);
-        product.setUpdatedAt(Instant.now());
-        return productRepository.save(product);
-    }
+public interface ProductService {
+    ProductResponse createProduct(ProductCreateRequest request);
+    ProductResponse getProductById(Long id);
+    ProductResponse getProductBySku(String sku);
+    Page<ProductResponse> getProductsByPriceRange(BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
+    Page<ProductResponse> getProductsByCategoryAndPriceRange(Long categoryId, BigDecimal minPrice, BigDecimal maxPrice, Pageable pageable);
+    Page<ProductResponse> getAllProducts(Pageable pageable);
+    Page<ProductResponse> getProductsByCategory(Long categoryId, Pageable pageable);
+    Page<ProductResponse> getProductsByBrand(Long brandId, Pageable pageable);
+    Page<ProductResponse> searchProducts(String query, Pageable pageable);
+    ProductResponse updateProduct(Long id, ProductUpdateRequest request);
+    void deleteProduct(Long id);
+    List<ProductResponse> getProductsByIds(List<Long> ids);
+    long countProductsByCategory(Long categoryId);
+     public long countProductsByBrand(Long brandId);
+     Page<ProductResponse> getProductsByFilters(Long categoryId, Long brandId, BigDecimal minPrice, BigDecimal maxPrice,
+            Pageable pageable);
 }

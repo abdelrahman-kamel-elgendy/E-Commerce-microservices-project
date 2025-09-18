@@ -1,4 +1,4 @@
-package com.e_Commerce.product_service.res;
+package com.e_Commerce.product_service.dtos.response;
 
 import java.time.LocalDateTime;
 import java.util.List;
