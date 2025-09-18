@@ -1,7 +1,6 @@
 package com.e_Commerce.product_service.services.impl;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -223,7 +222,8 @@ public class ProductServiceImpl implements ProductService{
     public void deleteProduct(Long id) {
         Product product = productRepository.findById(id)
             .orElseThrow(() ->new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found with id: " + id));
-        productRepository.delete(product);
+        product.setActive(false);
+        productRepository.save(product);
     }
 
     @Override
