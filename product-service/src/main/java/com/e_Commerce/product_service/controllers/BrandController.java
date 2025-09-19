@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.e_Commerce.product_service.dtos.request.BrandRequest;
-import com.e_Commerce.product_service.dtos.response.ApiResponse;
 import com.e_Commerce.product_service.dtos.response.BrandResponse;
 import com.e_Commerce.product_service.services.BrandService;
 
@@ -31,61 +30,32 @@ public class BrandController {
     BrandService brandService;
     
     @PostMapping
-    public ResponseEntity<ApiResponse<BrandResponse>> createBrand(@Valid @RequestBody BrandRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-            new ApiResponse<BrandResponse>(
-                true,
-                "Brand created successflly",
-                brandService.createBrand(request)
-            )
-        );
+    public ResponseEntity<BrandResponse> createBrand(@Valid @RequestBody BrandRequest request) {
+        BrandResponse created = brandService.createBrand(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<BrandResponse>> getBrandById(@PathVariable Long id) {
-        return ResponseEntity.ok(
-            new ApiResponse<BrandResponse>(
-                true,
-                "Brand retrieved successflly",
-                brandService.getBrandById(id)
-            )
-        );
+    public ResponseEntity<BrandResponse> getBrandById(@PathVariable Long id) {
+        return ResponseEntity.ok(brandService.getBrandById(id));
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<BrandResponse>>> getAllBrands() {
-        return ResponseEntity.ok(
-            new ApiResponse<List<BrandResponse>>(
-                true,
-                "Brands retrieved successflly",
-                brandService.getAllBrands()
-            )
-        );
+    public ResponseEntity<List<BrandResponse>> getAllBrands() {
+        return ResponseEntity.ok(brandService.getAllBrands());
     }
 
     @GetMapping("/page")
-    public ResponseEntity<ApiResponse<Page<BrandResponse>>> getAllBrands(Pageable pageable) {
-        return ResponseEntity.ok(
-            new ApiResponse<Page<BrandResponse>>(
-                true,
-                "Brands retrieved successflly",
-                brandService.getAllBrands(pageable)
-            )
-        );
+    public ResponseEntity<Page<BrandResponse>> getAllBrands(Pageable pageable) {
+        return ResponseEntity.ok(brandService.getAllBrands(pageable));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<BrandResponse>> updateBrand(
+    public ResponseEntity<BrandResponse> updateBrand(
         @PathVariable Long id, 
         @Valid @RequestBody BrandRequest request
     ) {
-        return ResponseEntity.ok(
-            new ApiResponse<BrandResponse>(
-                true,
-                "Brand updated successflly",
-                brandService.updateBrand(id, request)
-            )
-        );
+        return ResponseEntity.ok(brandService.updateBrand(id, request));
     }
 
     @DeleteMapping("/{id}")
@@ -95,14 +65,8 @@ public class BrandController {
     }
 
     @GetMapping("/{id}/has-products")
-    public ResponseEntity<ApiResponse<Long>> hasProducts(@PathVariable Long id) {
+    public ResponseEntity<Long> hasProducts(@PathVariable Long id) {
         long hasProducts = brandService.hasProducts(id);
-        return ResponseEntity.ok(
-            new ApiResponse<Long>(
-                true,
-                hasProducts > 0?"Brand has products":"Brand has no products",
-                hasProducts
-            )
-        );
+        return ResponseEntity.ok(hasProducts);
     }
 }

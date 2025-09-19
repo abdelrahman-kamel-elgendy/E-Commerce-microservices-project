@@ -1,111 +1,108 @@
 package com.e_Commerce.inventory_service.controllers;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.e_Commerce.inventory_service.dto.InventoryResponse;
+import com.e_Commerce.inventory_service.dto.InventoryRequest;
 import com.e_Commerce.inventory_service.models.Inventory;
-import com.e_Commerce.inventory_service.res.ApiResponse;
+import com.e_Commerce.inventory_service.models.MovementType;
 import com.e_Commerce.inventory_service.services.InventoryService;
-import org.springframework.web.bind.annotation.PutMapping;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
 
 
 @RestController
 @RequestMapping("/api/inventories")
 public class InventoryController {
     @Autowired
-    InventoryService inventoryService;
+    InventoryService service;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Inventory>> createInventory(@RequestParam Long productId, @RequestParam int quantity) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(
-            new ApiResponse<Inventory>(
-                true, 
-                "Inventory created successfully", 
-                inventoryService.createInventory(productId, quantity)
-            )
-        );
-    }
-
-    @PutMapping
-    public ResponseEntity<ApiResponse<Inventory>> updateStok(@RequestParam Long productId, @RequestParam int quantity) {
-        return ResponseEntity.ok(
-            new ApiResponse<Inventory>(
-                true,
-                "Inventory increased successfully",
-                inventoryService.updateStock(
-                    productId, 
-                    quantity
-                )
-            )
-        );
+    public ResponseEntity<InventoryResponse> createInventory(@Valid @RequestBody InventoryRequest inventory) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(service.createInventory(inventory));
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Inventory>>> getAllInventory() {
-        return ResponseEntity.ok(
-            new ApiResponse<List<Inventory>>(
-                true, 
-                "All inventories retrieved successfully",
-                inventoryService.getAllInventories()
-            )
-        );
+    public ResponseEntity<Page<InventoryResponse>> getAllInventories(Pageable pageable) {
+        return ResponseEntity.ok(service.getAllInventories(pageable));
     }
 
-    @DeleteMapping
-    public ResponseEntity<ApiResponse<Inventory>> deleteInventory(@RequestParam Long productId) {
-        return ResponseEntity.ok(
-            new ApiResponse<Inventory>(
-                true, 
-                "Inventory deleted successfully", 
-                inventoryService.deleteInventory(productId)
-            )  
-        );
+    @GetMapping("/product")
+    public ResponseEntity<Inventory> getPtoductInventory(
+        @RequestParam Long productId,
+        @RequestParam String sku
+    ) {
+        return ResponseEntity.ok(service.getPtoductInventory(productId, sku));
     }
 
-    @GetMapping("/productId")
-    public ResponseEntity<ApiResponse<Inventory>> getInventoryByProductId(@RequestParam Long productId) {
-        return ResponseEntity.ok(
-            new ApiResponse<Inventory>(
-                true, 
-                "Inventory retrieved successfully",
-                inventoryService.getInventoryByProductId(productId)
-            )
-        );
+    @PutMapping("/increase")
+    public ResponseEntity<Inventory> increaseInventory(
+        @RequestParam Long productId,
+        @RequestParam String sku,
+        @RequestParam int quantity
+    ) {
+        return ResponseEntity.ok(service.increaseInventory(productId, sku, quantity));
     }
-    
+
+    @PutMapping("/decrease")
+    public ResponseEntity<Inventory> decreaseInventory(
+        @RequestParam Long productId,
+        @RequestParam String sku,
+        @RequestParam int quantity
+    ) {
+        return ResponseEntity.ok(service.decreaseInventory(productId, sku, quantity));
+    }
 
     @GetMapping("/check")
-    public ResponseEntity<ApiResponse<Boolean>> checkQuantityAvilablity(@RequestParam Long productId, @RequestParam int quantity) {
-        return ResponseEntity.ok(
-            new ApiResponse<Boolean>(
-                true, 
-                "Availability checked successfully", 
-                inventoryService.checkQuantityAvailability(productId, quantity)
-            )
-        );
-    }    
-        
-    @PutMapping("/decrease")
-    public ResponseEntity<ApiResponse<Inventory>> decreaseStock(@RequestParam Long productId, @RequestParam int quantity) {
-        return ResponseEntity.ok(
-            new ApiResponse<Inventory>(
-                true,
-                "Inventory reduced successfully",
-                inventoryService.decrease(
-                    productId, 
-                    quantity
-                )
-            )
-        );
+    public ResponseEntity<Boolean> checkPtoductQuantity(
+        @RequestParam Long productId,
+        @RequestParam String sku,
+        @RequestParam int quantity
+    ) {
+        return ResponseEntity.ok(service.checkPtoductQuantity(productId, sku, quantity));
+    }
+
+    @GetMapping("/low-stock")
+    public ResponseEntity<Page<InventoryResponse>> getLowStockItems() {
+        return ResponseEntity.ok(service.getLowStockItems());
+    }
+
+    @PostMapping("/adjust")
+    public ResponseEntity<Inventory> adjustStock(
+        @RequestParam Long id,
+        @RequestParam Integer quantity,
+        @RequestParam String reason,
+        @RequestParam MovementType movementType
+    ) {
+        return ResponseEntity.ok(service.adjustStock(id, quantity, reason, movementType));
+    }
+
+    @PostMapping("/reserve")
+    public ResponseEntity<Inventory> reserveStock(
+        @RequestParam Long inventoryId,
+        @RequestParam Integer quantity,
+        @RequestParam Long orderId
+    ) {
+        return ResponseEntity.ok(service.reserveStock(inventoryId, quantity, orderId));
+    }
+
+    @PostMapping("/release")
+    public ResponseEntity<Inventory> releaseReservedStock(
+        @RequestParam Long inventoryId,
+        @RequestParam Integer quantity,
+        @RequestParam Long orderId
+    ) {
+        return ResponseEntity.ok(service.releaseReservedStock(inventoryId, quantity, orderId));
     }
 }

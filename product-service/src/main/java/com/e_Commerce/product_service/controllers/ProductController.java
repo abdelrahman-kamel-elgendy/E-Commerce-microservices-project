@@ -1,7 +1,6 @@
 package com.e_Commerce.product_service.controllers;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.e_Commerce.product_service.dtos.request.ProductCreateRequest;
 import com.e_Commerce.product_service.dtos.request.ProductUpdateRequest;
-import com.e_Commerce.product_service.dtos.response.ApiResponse;
 import com.e_Commerce.product_service.dtos.response.ProductResponse;
 import com.e_Commerce.product_service.services.ProductService;
 
@@ -36,115 +34,56 @@ public class ProductController {
     ProductService productService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<ProductResponse>> createProduct(@Valid @RequestBody ProductCreateRequest request) {
+    public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductCreateRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(
-            new ApiResponse<ProductResponse>(
-                true,
-                "Product created successfully",
                 productService.createProduct(request)
-            )
-        );
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> getProductById(@PathVariable Long id) {
-        return ResponseEntity.ok(
-            new ApiResponse<ProductResponse>(
-                true,
-                "Product retrieved successfully",
-                productService.getProductById(id)
-            )
-        );
-    }
-
-    @GetMapping("/sku/{sku}")
-    public ResponseEntity<ApiResponse<ProductResponse>> getProductBySku(@PathVariable String sku) {
-        return ResponseEntity.ok(
-            new ApiResponse<ProductResponse>(
-                true,
-                "Product retrieved successfully",
-                productService.getProductBySku(sku)
-            )
         );
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getAllProducts(Pageable pageable) {
-        return ResponseEntity.ok(
-            new ApiResponse<Page<ProductResponse>>(
-                true,
-                "Products retrieved successfully",
-                productService.getAllProducts(pageable)
-            )
-        );
+    public ResponseEntity<Page<ProductResponse>> getAllProducts(Pageable pageable) {
+        return ResponseEntity.ok(productService.getAllProducts(pageable));
     }
 
-    @GetMapping("/category/{categoryId}")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProductsByCategory(@PathVariable Long categoryId, Pageable pageable) {
-        return ResponseEntity.ok(
-            new ApiResponse<Page<ProductResponse>>(
-                true,
-                "Products retrieved successfully",
-                productService.getProductsByCategory(categoryId, pageable)
-            )
-        );
+    @GetMapping("/id")
+    public ResponseEntity<ProductResponse> getProductById(@RequestParam Long id) {
+        return ResponseEntity.ok(productService.getProductById(id));
     }
 
-    @GetMapping("/brand/{brandId}")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProductsByBrand(@PathVariable Long brandId, Pageable pageable) {
-       return ResponseEntity.ok(
-            new ApiResponse<Page<ProductResponse>>(
-                true,
-                "Products retrieved successfully",
-                productService.getProductsByBrand(brandId, pageable)
-            )
-        );
+    @GetMapping("/check")
+    public ResponseEntity<Boolean> checkProductExistence(
+        @RequestParam Long id,
+        @RequestParam String sku
+    ) {
+        return ResponseEntity.ok(productService.existsByIdAndSku(id, sku));
+    }
+
+    @GetMapping("/category")
+    public ResponseEntity<Page<ProductResponse>> getProductsByCategory(
+        @RequestParam Long categoryId, 
+        Pageable pageable
+    ) {
+        return ResponseEntity.ok(productService.getProductsByCategory(categoryId, pageable));
+    }
+
+    @GetMapping("/brand")
+    public ResponseEntity<Page<ProductResponse>> getProductsByBrand(
+        @RequestParam Long brandId, 
+        Pageable pageable
+    ) {
+       return ResponseEntity.ok(productService.getProductsByBrand(brandId, pageable));
     }
 
     @GetMapping("/search")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> searchProducts(@RequestParam String query, Pageable pageable) {
-        return ResponseEntity.ok(
-            new ApiResponse<Page<ProductResponse>>(
-                true,
-                "Products retrieved successfully",
-                productService.searchProducts(query, pageable)
-            )
-        );
-    }
-
-    @GetMapping("/price-range")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProductsByPriceRange(
-        @RequestParam BigDecimal minPrice,
-        @RequestParam BigDecimal maxPrice,
+    public ResponseEntity<Page<ProductResponse>> searchProducts(
+        @RequestParam String query, 
         Pageable pageable
     ) {
-        return ResponseEntity.ok(
-            new ApiResponse<Page<ProductResponse>>(
-                true,
-                "Products retrieved successfully",
-                productService.getProductsByPriceRange(minPrice, maxPrice, pageable)
-            )
-        );
-    }
-
-    @GetMapping("/category/{categoryId}/price-range")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProductsByCategoryAndPriceRange(
-        @PathVariable Long categoryId,
-        @RequestParam BigDecimal minPrice,
-        @RequestParam BigDecimal maxPrice,
-        Pageable pageable
-    ) {
-        return ResponseEntity.ok(
-            new ApiResponse<Page<ProductResponse>>(
-                true,
-                "Products retrieved successfully",
-                productService.getProductsByCategoryAndPriceRange(categoryId, minPrice, maxPrice, pageable)
-            )
-        );
+        return ResponseEntity.ok(productService.searchProducts(query, pageable));
     }
 
     @GetMapping("/filter")
-    public ResponseEntity<ApiResponse<Page<ProductResponse>>> getProductsByFilters(
+    public ResponseEntity<Page<ProductResponse>> getProductsByFilters(
         @RequestParam(required = false) Long categoryId,
         @RequestParam(required = false) Long brandId,
         @RequestParam(required = false) BigDecimal minPrice,
@@ -152,64 +91,28 @@ public class ProductController {
         Pageable pageable
     ) {
         return ResponseEntity.ok(
-            new ApiResponse<Page<ProductResponse>>(
-                true,
-                "Products retrieved successfully",
-                productService.getProductsByFilters(categoryId, brandId, minPrice, maxPrice, pageable)
+            productService.getProductsByFilters(
+                categoryId, 
+                brandId, 
+                minPrice, 
+                maxPrice, 
+                pageable
             )
+        
         );
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<ProductResponse>> updateProduct(
+    public ResponseEntity<ProductResponse> updateProduct(
         @PathVariable Long id, 
         @Valid @RequestBody ProductUpdateRequest request
     ) {
-        return ResponseEntity.ok(
-            new ApiResponse<ProductResponse>(
-                true,
-                "Product updated successfully",
-                productService.updateProduct(id, request)
-            )
-        );
+        return ResponseEntity.ok(productService.updateProduct(id, request));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> softDeleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/batch")
-    public ResponseEntity<ApiResponse<List<ProductResponse>>> getProductsByIds(@RequestBody List<Long> ids) {
-        return ResponseEntity.ok(
-            new ApiResponse<List<ProductResponse>>(
-                true,
-                "Products retrieved successfully",
-                productService.getProductsByIds(ids)
-            )
-        );
-    }
-
-    @GetMapping("/category/{categoryId}/count")
-    public ResponseEntity<ApiResponse<Long>> countProductsByCategory(@PathVariable Long categoryId) {
-        return ResponseEntity.ok(
-            new ApiResponse<Long>(
-                true,
-                "Products count retrieved successfully",
-                productService.countProductsByCategory(categoryId)
-            )
-        );
-    }
-
-    @GetMapping("/brand/{brandId}/count")
-    public ResponseEntity<ApiResponse<Long>> countProductsByBrand(@PathVariable Long brandId) {
-        return ResponseEntity.ok(
-            new ApiResponse<Long>(
-                true,
-                "Products count retrieved successfully",
-                productService.countProductsByBrand(brandId)
-            )
-        );
     }
 }

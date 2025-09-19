@@ -1,4 +1,4 @@
-package com.e_Commerce.product_service.dtos.response;
+package com.e_Commerce.inventory_service.dto.product;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -19,6 +19,7 @@ public class ProductResponse {
     private String name;
     private String description;
     private BigDecimal price;
+    private int stockQuantity;
     private String categoryName;
     private String brandName;
     private Boolean active;

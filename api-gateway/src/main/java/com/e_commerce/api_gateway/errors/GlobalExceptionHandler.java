@@ -1,21 +1,18 @@
-package com.e_Commerce.inventory_service.errors;
+package com.e_commerce.api_gateway.errors;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.e_Commerce.inventory_service.res.ApiResponse;
-
-
-
+import com.e_commerce.api_gateway.res.ApiResponse;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
@@ -24,6 +21,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<?>> handleGeneralException(ResponseStatusException ex) {
         return ResponseEntity.status(ex.getStatusCode())
                 .body(new ApiResponse<>(false, ex.getMessage(), null));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiResponse<?>> handleGeneralException(HttpMessageNotReadableException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body(new ApiResponse<>(false, "Required request body is missing", ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -39,18 +42,9 @@ public class GlobalExceptionHandler {
                 .body(new ApiResponse<>(false, "Validation Error", errors));
     }
 
-
-    
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiResponse<?>> handleGeneralException(DataIntegrityViolationException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ApiResponse<>(false, "Database Error", ex.getMessage()));
-    }
-    
-    
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<?>> handleGeneralException(Exception ex) {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ApiResponse<>(false, ex.getClass().getName(), null));
+                .body(new ApiResponse<>(false, ex.getMessage(), ex.getMessage()));
     }
 }

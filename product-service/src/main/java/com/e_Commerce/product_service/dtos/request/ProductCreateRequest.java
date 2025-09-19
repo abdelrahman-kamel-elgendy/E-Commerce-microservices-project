@@ -24,7 +24,6 @@ public class ProductCreateRequest {
     
     private String description;
     
-    @NotNull(message = "Price is required")
     @Positive(message = "Price must be positive")
     private BigDecimal price;
     

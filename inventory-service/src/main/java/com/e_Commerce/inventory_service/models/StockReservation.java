@@ -4,6 +4,8 @@ import java.time.Instant;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -18,43 +20,29 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "inventories")
-public class Inventory {
+@Table(name = "stock_reservations")
+public class StockReservation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id", nullable = false)
-    private Long productId;
+    @Column(name = "inventory_id", nullable = false)
+    private Long inventoryId;
 
-    @Column(name = "sku_code", nullable = false, unique = true)
-    private String skuCode;
+    @Column(name = "order_id", nullable = false)
+    private Long orderId;
 
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
-    @Column(name = "min_stock_level")
-    private Integer minStockLevel = 10;
-    
-    @Column(name = "max_stock_level")
-    private Integer maxStockLevel = 1000;
-    
-    @Column(name = "reorder_point")
-    private Integer reorderPoint = 50;
-    
-    @Column(name = "location")
-    private String location;
-    
-    @Column(name = "batch_number")
-    private String batchNumber;
-    
-    @Column(name = "expiry_date")
-    private Instant expiryDate;
-    
-    @Column(name = "reserved_quantity", nullable = false)
-    private Integer reservedQuantity;
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private ReservationStatus status;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
@@ -64,7 +52,6 @@ public class Inventory {
     protected void onCreate() {
         createdAt = Instant.now();
         updatedAt = Instant.now();
-        reservedQuantity = 0;
     }
 
     @PreUpdate
@@ -72,9 +59,12 @@ public class Inventory {
         updatedAt = Instant.now();
     }
 
-    public Inventory(Long productId, String skuCode, Integer quantity) {
-        this.productId = productId;
-        this.skuCode = skuCode;
+    public StockReservation(Long inventoryId, Long orderId, Integer quantity) {
+        this.inventoryId = inventoryId;
+        this.orderId = orderId;
         this.quantity = quantity;
+        this.status = ReservationStatus.RESERVED;
     }
 }
+
+

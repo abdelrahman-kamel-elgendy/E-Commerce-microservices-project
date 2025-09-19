@@ -1,4 +1,4 @@
-package com.e_Commerce.product_service.dtos.response;
+package com.e_Commerce.inventory_service.dto;
 
 import java.math.BigDecimal;
 import java.time.Instant;

@@ -1,22 +1,173 @@
 package com.e_Commerce.product_service.services;
 
-
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Service;
+import com.e_Commerce.product_service.exception.BadRequestException;
+import com.e_Commerce.product_service.exception.ResourceNotFoundException;
+import com.e_Commerce.product_service.exception.ApiException;
 
 import com.e_Commerce.product_service.dtos.request.CategoryRequest;
 import com.e_Commerce.product_service.dtos.response.CategoryResponse;
+import com.e_Commerce.product_service.models.Category;
+import com.e_Commerce.product_service.repositories.CategoryRepository;
+import com.e_Commerce.product_service.repositories.ProductRepository;
 
-public interface CategoryService {
-    CategoryResponse createCategory(CategoryRequest request);
-    CategoryResponse getCategoryById(Long id);
-    List<CategoryResponse> getAllCategories();
-    Page<CategoryResponse> getAllCategories(Pageable pageable);
-    List<CategoryResponse> getRootCategories();
-    List<CategoryResponse> getChildCategories(Long parentId);
-    CategoryResponse updateCategory(Long id, CategoryRequest request);
-    void deleteCategory(Long id);
-    long hasProducts(Long categoryId);
+import jakarta.transaction.Transactional;
+
+@Service
+@Transactional
+public class CategoryService{
+
+    @Autowired
+    CategoryRepository categoryRepository;
+    
+    @Autowired
+    ProductRepository productRepository;
+
+    
+    public CategoryResponse createCategory(CategoryRequest request) {
+        if (categoryRepository.existsByName(request.getName())) 
+            throw new BadRequestException("Category with name " + request.getName() + " already exists");
+        
+
+        Category category = new Category();
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
+        
+        if (request.getParentId() != null) {
+        Category parent = categoryRepository.findById(request.getParentId())
+            .orElseThrow(() -> new ResourceNotFoundException("Parent category not found with id: " + request.getParentId()));
+            category.setParent(parent);
+        }
+        
+        return mapToCategoryResponse(categoryRepository.save(category));
+    }
+
+    
+    @Transactional
+    public CategoryResponse getCategoryById(Long id) {
+    Category category = categoryRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+        return mapToCategoryResponse(category);
+    }
+
+    
+    @Transactional
+    public List<CategoryResponse> getAllCategories() {
+        return categoryRepository.findByActiveTrue().stream()
+                .map(this::mapToCategoryResponse)
+                .collect(Collectors.toList());
+    }
+
+    
+    @Transactional
+    public Page<CategoryResponse> getAllCategories(Pageable pageable) {
+        return categoryRepository.findByActiveTrue(pageable)
+                .map(this::mapToCategoryResponse);
+    }
+
+    
+    @Transactional
+    public List<CategoryResponse> getRootCategories() {
+        return categoryRepository.findRootCategories().stream()
+                .map(this::mapToCategoryResponse)
+                .collect(Collectors.toList());
+    }
+
+    
+    @Transactional
+    public List<CategoryResponse> getChildCategories(Long parentId) {
+        return categoryRepository.findActiveChildrenByParentId(parentId).stream()
+                .map(this::mapToCategoryResponse)
+                .collect(Collectors.toList());
+    }
+
+    
+    public CategoryResponse updateCategory(Long id, CategoryRequest request) {
+    Category category = categoryRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+        
+        if (request.getName() != null && !request.getName().equals(category.getName())) {
+            if (categoryRepository.existsByNameAndIdNot(request.getName(), id)) 
+                throw new ApiException(HttpStatus.CONFLICT, "Category with name " + request.getName() + " already exists");
+            
+            category.setName(request.getName());
+        }
+        
+        if (request.getDescription() != null) 
+            category.setDescription(request.getDescription());
+        
+        
+        if (request.getParentId() != null) {
+            if (request.getParentId().equals(id)) 
+                throw new ApiException(HttpStatus.CONFLICT, "Category cannot be its own parent");
+            
+            
+        Category parent = categoryRepository.findById(request.getParentId())
+            .orElseThrow(() -> new ResourceNotFoundException("Parent category not found with id: " + request.getParentId()));
+            
+            category.setParent(parent);
+        } else {
+            category.setParent(null);
+        }
+        
+        return mapToCategoryResponse(categoryRepository.save(category));
+    }
+
+    
+    public void deleteCategory(Long id) {
+    Category category = categoryRepository.findById(id)
+        .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
+        
+        if (hasProducts(id) > 0) 
+            throw new BadRequestException("Cannot delete category with associated products");
+        
+        
+        if (categoryRepository.countChildrenByParentId(id) > 0) 
+            throw new BadRequestException("Cannot delete category with child categories");
+        
+        
+        category.setActive(false);
+        categoryRepository.save(category);
+    }
+
+    
+    @Transactional
+    public long hasProducts(Long categoryId) {
+        return productRepository.countByCategoryId(categoryId);
+    }
+
+    private CategoryResponse mapToCategoryResponse(Category category) {
+        CategoryResponse response = new CategoryResponse();
+        response.setId(category.getId());
+        response.setName(category.getName());
+        response.setDescription(category.getDescription());
+        response.setActive(category.getActive());
+        
+        if (category.getParent() != null) {
+            response.setParentId(category.getParent().getId());
+            response.setParentName(category.getParent().getName());
+        }
+        
+        response.setProductCount(productRepository.countByCategoryId(category.getId()));
+        
+        if (category.getChildren() != null && !category.getChildren().isEmpty()) {
+            List<CategoryResponse> children = category.getChildren().stream()
+                    .filter(Category::getActive)
+                    .map(this::mapToCategoryResponse)
+                    .collect(Collectors.toList());
+            response.setChildren(children);
+        }
+
+        response.setCreatedAt(category.getCreatedAt());
+        response.setUpdatedAt(category.getUpdatedAt());
+        
+        return response;
+    }
 }
