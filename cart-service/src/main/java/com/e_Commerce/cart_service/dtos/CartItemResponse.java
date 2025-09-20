@@ -15,6 +15,7 @@ public class CartItemResponse {
     private Integer quantity;
     private BigDecimal totalPrice;
     private String productImageUrl;
+    private String productImageAltText;
 
     public CartItemResponse(Long id, int quantity, ProductResponse product) {
         this.id = id;
@@ -23,6 +24,7 @@ public class CartItemResponse {
         this.unitPrice = product.getPrice();
         this.quantity = quantity;
         this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
-        this.productImageUrl = product.getImages().getFirst().getImageUrl();
+        this.productImageUrl = (product.getImages() != null && !product.getImages().isEmpty()) ? product.getImages().getFirst().getImageUrl() : null;;
+        this.productImageAltText = (product.getImages() != null && !product.getImages().isEmpty()) ? product.getImages().getFirst().getAltText() : null;;
     }
 }

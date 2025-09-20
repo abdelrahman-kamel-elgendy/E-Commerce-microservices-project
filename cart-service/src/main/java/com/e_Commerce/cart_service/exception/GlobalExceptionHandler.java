@@ -148,7 +148,7 @@ public class GlobalExceptionHandler {
             status.getReasonPhrase(),
             request.getRequestURI(),
             "NOT_FOUND",
-            null
+            ex.getClass()
         );
         return new ResponseEntity<>(body, status);
     }
