@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class CartItemDTO {
+public class CartItemResponse {
     private Long id;
     private Long productId;
     private String productName;
@@ -16,13 +16,13 @@ public class CartItemDTO {
     private BigDecimal totalPrice;
     private String productImageUrl;
 
-    public CartItemDTO(Long id, int quantity, ProductDetails product) {
+    public CartItemResponse(Long id, int quantity, ProductResponse product) {
         this.id = id;
         this.productId = product.getId(); 
         this.productName = product.getName();
         this.unitPrice = product.getPrice();
         this.quantity = quantity;
         this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
-        this.productImageUrl = product.getImageUrl();
+        this.productImageUrl = product.getImages().getFirst().getImageUrl();
     }
 }

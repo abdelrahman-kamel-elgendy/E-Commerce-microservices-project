@@ -3,12 +3,17 @@ package com.e_Commerce.cart_service.services;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.e_Commerce.cart_service.dtos.CartItemResponse;
+import com.e_Commerce.cart_service.dtos.CartResponse;
+import com.e_Commerce.cart_service.exception.InvalidRequestException;
+import com.e_Commerce.cart_service.exception.ResourceNotFoundException;
+import com.e_Commerce.cart_service.feigns.ProductServiceClient;
 import com.e_Commerce.cart_service.models.Cart;
 import com.e_Commerce.cart_service.models.CartItem;
 import com.e_Commerce.cart_service.models.CartStatus;
@@ -27,44 +32,69 @@ public class CartService {
     @Autowired
     CartItemRepository cartItemRepository;
 
-    public List<CartItem> getItemByCartId(Long cartId) {
-        return cartItemRepository.findByCartId(cartId);
+    @Autowired
+    ProductServiceClient productServiceClient;
+
+    public List<CartItemResponse> getItemByCartId(Long cartId) {
+        List<CartItem> cartItems = cartItemRepository.findByCartId(cartId);
+    
+        return cartItems.stream()
+            .map(cartItem -> new CartItemResponse(
+                cartItem.getId(),
+                cartItem.getQuantity(),
+                productServiceClient.getProductById(cartItem.getProductId()).getBody()
+            )
+        ).collect(Collectors.toList());
     }
     
     public CartItem getItemByCartIdAndProductId(Long cartId, Long productId) {
         return cartItemRepository.findByCartIdAndProductId(cartId, productId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart item with cart id: " + cartId + " and user id: " + cartId +" not found!"));
+                .orElseThrow(() -> new ResourceNotFoundException("Cart item with cart id: " + cartId + " and user id: " + cartId +" not found!"));
     }
 
-    public Cart getOrCreateCart(Long userId) {
+    public CartResponse getOrCreateCart(Long userId) {
         try {
             return this.getActiveCartByUserId(userId);
 
-        } catch (ResponseStatusException ex) {
-            
-            return cartRepository.save(new Cart(userId));
+        } catch (ResourceNotFoundException ex) {
+            Cart cart = cartRepository.save(new Cart(userId));
+            return new CartResponse(cart, getItemByCartId(cart.getId())) ;
         }
     }
 
-    public Cart getCartById(Long cartId) {
+    private Cart getCartById(Long cartId) {
         return cartRepository.findById(cartId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Cart with id: " + cartId + " not found!"));
+            .orElseThrow(() -> new ResourceNotFoundException("Cart with id: " + cartId + " not found!"));
     }
 
-    public Cart getActiveCartByUserId(Long userId) {
-        return cartRepository.findActiveCartByUserId(userId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Active cart with user id: " + userId + " not found!"));
-    }
-
-    public Cart addItemToCart(Long cartId, Long productId, int quantity) {
-        Cart cart = getCartById(cartId);
+    public CartResponse getCartResponseById(Long cartId) {
+        Cart cart = cartRepository.findById(cartId)
+            .orElseThrow(() -> new ResourceNotFoundException("Cart with id: " + cartId + " not found!"));
         
+        return new CartResponse(cart, this.getItemByCartId(cartId));
+    }
+
+    public CartResponse getActiveCartByUserId(Long userId) {
+        Cart cart = cartRepository.findActiveCartByUserId(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Active cart with user id: " + userId + " not found!"));
+
+        return new CartResponse(cart, this.getItemByCartId(cart.getId()));
+    }
+
+    public CartResponse addItemToCart(Long cartId, String sku, Long productId, int quantity) {
+        if(quantity <= 0)
+            throw new InvalidRequestException("Quantity must be positive");
+
+        if(!productServiceClient.checkProductExistence(productId, sku).getBody())
+            throw new ResourceNotFoundException("Product with id: " + productId + " and sku: " + sku + " not found");
+
+        Cart cart = this.getCartById(cartId);
         try{
             CartItem item = this.getItemByCartIdAndProductId(cartId, productId);
             item.increaseQuantity(quantity);
             cartItemRepository.save(item);
 
-        } catch(ResponseStatusException ex) {
+        } catch(ResourceNotFoundException ex) {
             cart.getItems().add(
                 cartItemRepository.save(
                     new CartItem(
@@ -76,15 +106,16 @@ public class CartService {
             );
         }
 
-        return cartRepository.save(cart);
+        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
     }
 
-    public Cart updateItemQuantity(Long cartId, Long productId, Integer quantity) {
+    public CartResponse updateItemQuantity(Long cartId, Long productId, Integer quantity) {
+        if(quantity < 0)
+            throw new InvalidRequestException("Quantity must be positive");
+
         Cart cart = getCartById(cartId);
-        
         CartItem item = this.getItemByCartIdAndProductId(cartId, productId);
-        
-        if (quantity <= 0) {
+        if (quantity == 0) {
             this.removeItemFromCart(cartId, productId);
             cart.getItems().removeIf(i -> i.getProductId().equals(productId));
         } else {
@@ -92,20 +123,20 @@ public class CartService {
             cartItemRepository.save(item);
         }
         
-        return cartRepository.save(cart);
+        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
     }
 
-    public Cart removeItemFromCart(Long cartId, Long productId) {
+    public CartResponse removeItemFromCart(Long cartId, Long productId) {
         Cart cart = getCartById(cartId);
         CartItem item = getItemByCartIdAndProductId(cartId, productId);
 
         cart.removeItem(item);
         cartItemRepository.delete(item);
         
-        return cartRepository.save(cart);
+        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
     }
 
-    public Cart clearCart(Long cartId) {
+    public CartResponse clearCart(Long cartId) {
         Cart cart = getCartById(cartId);
         
         cartItemRepository.clearCart(cartId);
@@ -113,10 +144,10 @@ public class CartService {
         cart.setItemCount(0);
         cart.setUpdatedAt(Instant.now());
         
-        return cartRepository.save(cart);
+        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
     }
 
-    public Cart mergeCarts(Long sourceCartId, Long targetCartId) {
+    public CartResponse mergeCarts(Long sourceCartId, Long targetCartId) {
         Cart sourceCart = getCartById(sourceCartId);
         Cart targetCart = getCartById(targetCartId);
         
@@ -143,19 +174,19 @@ public class CartService {
         sourceCart.setStatus(CartStatus.MERGED);
         cartRepository.save(sourceCart);
 
-        return cartRepository.save(targetCart);
+        return new CartResponse(cartRepository.save(targetCart), this.getItemByCartId(targetCartId));
     }
 
-    public Cart abandonCart(Long cartId) {
+    public CartResponse abandonCart(Long cartId) {
         Cart cart = getCartById(cartId);
         cart.setStatus(CartStatus.ABANDONED);
-        return cartRepository.save(cart);
+        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
     }
 
-    public Cart convertToOrder(Long cartId) {
+    public CartResponse convertToOrder(Long cartId) {
         Cart cart = getCartById(cartId);
         cart.setStatus(CartStatus.CONVERTED_TO_ORDER);
-        return cartRepository.save(cart);
+        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
     }
 
     public List<Cart> getUserCarts(Long userId) {

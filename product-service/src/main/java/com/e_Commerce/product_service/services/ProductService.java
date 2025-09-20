@@ -220,6 +220,18 @@ public class ProductService {
         product.setActive(false);
         productRepository.save(product);
     }
+    
+    public boolean existsByIdAndSku(Long productId, String sku) {
+        return productRepository.existsByIdAndSku(productId, sku);
+    }
+
+    public List<ProductResponse> getProductByIds(List<Long> ids) {
+        return productRepository.findAllById(ids)
+            .stream()
+            .map(this::mapToProductResponse)
+            .collect(Collectors.toList());
+    }
+
 
     private ProductResponse mapToProductResponse(Product product) {
         ProductResponse response = new ProductResponse();
@@ -252,10 +264,5 @@ public class ProductService {
         }
         
         return response;
-    }
-
-    
-    public boolean existsByIdAndSku(Long productId, String sku) {
-        return productRepository.existsByIdAndSku(productId, sku);
     }
 }

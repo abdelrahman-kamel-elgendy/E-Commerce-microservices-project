@@ -12,7 +12,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class CartDTO {
+public class CartResponse {
     private Long id;
     private Long userId;
     private CartStatus status;
@@ -20,9 +20,9 @@ public class CartDTO {
     private Integer itemCount;
     private Instant createdAt;
     private Instant updatedAt;
-    private List<CartItemDTO> items;
+    private List<CartItemResponse> items;
 
-    public CartDTO(Cart cart,  List<CartItemDTO> items) {
+    public CartResponse(Cart cart, List<CartItemResponse> items) {
         this.id = cart.getId();
         this.userId = cart.getUserId();
         this.status = cart.getStatus();
@@ -31,7 +31,7 @@ public class CartDTO {
         this.createdAt = cart.getCreatedAt();
         this.updatedAt = cart.getUpdatedAt();
 
-        for (CartItemDTO cartItemDTO : items)
-            this.totalAmount = this.totalAmount.add(cartItemDTO.getTotalPrice());
+        for (CartItemResponse cartItemResponse : items)
+            this.totalAmount = this.totalAmount.add(cartItemResponse.getTotalPrice());
     }
 }
