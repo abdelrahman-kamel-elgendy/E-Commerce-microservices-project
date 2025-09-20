@@ -3,8 +3,8 @@ package com.e_Commerce.inventory_service.controllers;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.e_Commerce.inventory_service.dto.InventoryResponse;
-import com.e_Commerce.inventory_service.dto.InventoryRequest;
+import com.e_Commerce.inventory_service.dto.request.InventoryRequest;
+import com.e_Commerce.inventory_service.dto.response.InventoryResponse;
 import com.e_Commerce.inventory_service.models.Inventory;
 import com.e_Commerce.inventory_service.models.MovementType;
 import com.e_Commerce.inventory_service.services.InventoryService;
@@ -77,6 +77,7 @@ public class InventoryController {
     public ResponseEntity<Page<InventoryResponse>> getLowStockItems() {
         return ResponseEntity.ok(service.getLowStockItems());
     }
+
 
     @PostMapping("/adjust")
     public ResponseEntity<Inventory> adjustStock(

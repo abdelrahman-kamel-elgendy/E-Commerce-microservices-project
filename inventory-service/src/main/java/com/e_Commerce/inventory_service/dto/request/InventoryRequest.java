@@ -1,4 +1,4 @@
-package com.e_Commerce.inventory_service.dto;
+package com.e_Commerce.inventory_service.dto.request;
 
 import java.time.Instant;
 

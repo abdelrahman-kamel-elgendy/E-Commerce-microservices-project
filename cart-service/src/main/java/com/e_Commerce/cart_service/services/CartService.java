@@ -11,8 +11,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.e_Commerce.cart_service.dtos.CartItemResponse;
 import com.e_Commerce.cart_service.dtos.CartResponse;
+import com.e_Commerce.cart_service.dtos.ProductResponse;
+import com.e_Commerce.cart_service.exception.InsufficientInventoryException;
 import com.e_Commerce.cart_service.exception.InvalidRequestException;
 import com.e_Commerce.cart_service.exception.ResourceNotFoundException;
+import com.e_Commerce.cart_service.feigns.InventoryServiceClient;
 import com.e_Commerce.cart_service.feigns.ProductServiceClient;
 import com.e_Commerce.cart_service.models.Cart;
 import com.e_Commerce.cart_service.models.CartItem;
@@ -34,7 +37,30 @@ public class CartService {
 
     @Autowired
     ProductServiceClient productServiceClient;
+    
+    @Autowired
+    InventoryServiceClient inventoryServiceClient;
 
+
+    private Cart getCartById(Long cartId) {
+        return cartRepository.findById(cartId)
+            .orElseThrow(() -> new ResourceNotFoundException("Cart with id: " + cartId + " not found!"));
+    }
+
+    private ProductResponse getproduct(Long productId) {
+        ProductResponse product = productServiceClient.getProductById(productId).getBody();
+
+        if(!product.getActive())
+            throw new ResourceNotFoundException("Product with id: " + productId + " not found!");
+
+        return product;
+    }
+
+    private Cart getCartByUserId(Long userId) {
+        return cartRepository.findActiveCartByUserId(userId)
+            .orElseThrow(() -> new ResourceNotFoundException("Active cart with user id: " + userId + " not found!"));
+    }
+    
     public List<CartItemResponse> getItemByCartId(Long cartId) {
         List<CartItem> cartItems = cartItemRepository.findByCartId(cartId);
     
@@ -42,7 +68,7 @@ public class CartService {
             .map(cartItem -> new CartItemResponse(
                 cartItem.getId(),
                 cartItem.getQuantity(),
-                productServiceClient.getProductById(cartItem.getProductId()).getBody()
+                this.getproduct(cartItem.getProductId())
             )
         ).collect(Collectors.toList());
     }
@@ -52,21 +78,6 @@ public class CartService {
                 .orElseThrow(() -> new ResourceNotFoundException("Cart item with cart id: " + cartId + " and user id: " + cartId +" not found!"));
     }
 
-    public CartResponse getOrCreateCart(Long userId) {
-        try {
-            return this.getActiveCartByUserId(userId);
-
-        } catch (ResourceNotFoundException ex) {
-            Cart cart = cartRepository.save(new Cart(userId));
-            return new CartResponse(cart, getItemByCartId(cart.getId())) ;
-        }
-    }
-
-    private Cart getCartById(Long cartId) {
-        return cartRepository.findById(cartId)
-            .orElseThrow(() -> new ResourceNotFoundException("Cart with id: " + cartId + " not found!"));
-    }
-
     public CartResponse getCartResponseById(Long cartId) {
         Cart cart = cartRepository.findById(cartId)
             .orElseThrow(() -> new ResourceNotFoundException("Cart with id: " + cartId + " not found!"));
@@ -74,27 +85,48 @@ public class CartService {
         return new CartResponse(cart, this.getItemByCartId(cartId));
     }
 
-    public CartResponse getActiveCartByUserId(Long userId) {
+    public CartResponse getCartResponseByUserId(Long userId) {
         Cart cart = cartRepository.findActiveCartByUserId(userId)
             .orElseThrow(() -> new ResourceNotFoundException("Active cart with user id: " + userId + " not found!"));
 
         return new CartResponse(cart, this.getItemByCartId(cart.getId()));
     }
 
-    public CartResponse addItemToCart(Long cartId, String sku, Long productId, int quantity) {
+    public CartResponse addToCart(Long userId, String sku, Long productId, int quantity) {
         if(quantity <= 0)
             throw new InvalidRequestException("Quantity must be positive");
 
         if(!productServiceClient.checkProductExistence(productId, sku).getBody())
             throw new ResourceNotFoundException("Product with id: " + productId + " and sku: " + sku + " not found");
 
-        Cart cart = this.getCartById(cartId);
-        try{
-            CartItem item = this.getItemByCartIdAndProductId(cartId, productId);
-            item.increaseQuantity(quantity);
-            cartItemRepository.save(item);
+        if(!inventoryServiceClient.checkPtoductQuantity(productId, sku, quantity).getBody())
+            throw new InsufficientInventoryException("Requested " + quantity + " not available");
 
-        } catch(ResourceNotFoundException ex) {
+        Cart cart; 
+        try {
+            cart = this.getCartByUserId(userId);
+            cart.setStatus(CartStatus.ACTIVE);
+            try {
+                CartItem item = this.getItemByCartIdAndProductId(cart.getId(), productId);
+                int newQuantity = item.getQuantity() + quantity;
+                if(!inventoryServiceClient.checkPtoductQuantity(productId, sku, newQuantity).getBody()) 
+                    throw new InsufficientInventoryException("Requested " + newQuantity + " not available");
+                
+                item.increaseQuantity(quantity);
+                cartItemRepository.save(item);
+            } catch (ResourceNotFoundException ex) {
+                cart.getItems().add(
+                    cartItemRepository.save(
+                        new CartItem(
+                            cart, 
+                            productId, 
+                            quantity
+                        )
+                    )
+                );
+            }
+        } catch (ResourceNotFoundException ex) {
+            cart = cartRepository.save(new Cart(userId));
             cart.getItems().add(
                 cartItemRepository.save(
                     new CartItem(
@@ -106,12 +138,16 @@ public class CartService {
             );
         }
 
-        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
+        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cart.getId()));
     }
 
-    public CartResponse updateItemQuantity(Long cartId, Long productId, Integer quantity) {
+    public CartResponse updateItemQuantity(Long cartId, Long productId, String sku, Integer quantity) {
         if(quantity < 0)
             throw new InvalidRequestException("Quantity must be positive");
+        
+        if(!inventoryServiceClient.checkPtoductQuantity(productId, sku, quantity).getBody())
+            throw new InsufficientInventoryException("Requested " + quantity + " not available");
+
 
         Cart cart = getCartById(cartId);
         CartItem item = this.getItemByCartIdAndProductId(cartId, productId);
@@ -175,12 +211,6 @@ public class CartService {
         cartRepository.save(sourceCart);
 
         return new CartResponse(cartRepository.save(targetCart), this.getItemByCartId(targetCartId));
-    }
-
-    public CartResponse abandonCart(Long cartId) {
-        Cart cart = getCartById(cartId);
-        cart.setStatus(CartStatus.ABANDONED);
-        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
     }
 
     public CartResponse convertToOrder(Long cartId) {

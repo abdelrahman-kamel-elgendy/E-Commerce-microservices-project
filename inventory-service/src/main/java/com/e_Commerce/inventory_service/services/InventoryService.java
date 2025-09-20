@@ -7,12 +7,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.e_Commerce.inventory_service.dto.InventoryRequest;
-import com.e_Commerce.inventory_service.dto.InventoryResponse;
-import com.e_Commerce.inventory_service.dto.ProductResponse;
+import com.e_Commerce.inventory_service.dto.request.InventoryRequest;
+import com.e_Commerce.inventory_service.dto.response.InventoryResponse;
+import com.e_Commerce.inventory_service.dto.response.ProductResponse;
 import com.e_Commerce.inventory_service.exceptions.InsufficientInventoryException;
 import com.e_Commerce.inventory_service.exceptions.InvalidRequestException;
 import com.e_Commerce.inventory_service.exceptions.ResourceAlreadyExistsException;
@@ -42,9 +41,7 @@ public class InventoryService {
     ProductServiceClient productServiceClient;
 
     public InventoryResponse createInventory(InventoryRequest dto) {
-        ResponseEntity<Boolean> productResponse = productServiceClient.checkProductExistence(dto.getProductId(), dto.getSkuCode());
-        if(productResponse == null || !productResponse.getBody())
-            throw new ResourceNotFoundException("Product not found id: " + dto.getProductId());
+        ProductResponse product = this.getProductById(dto.getProductId());
 
         if (repository.existsByProductIdAndSkuCode(dto.getProductId(), dto.getSkuCode()))
             throw new ResourceAlreadyExistsException("Inventory already exists for productId=" + dto.getProductId() + " sku=" + dto.getSkuCode());
@@ -58,25 +55,21 @@ public class InventoryService {
         if (dto.getBatchNumber() != null) inventory.setBatchNumber(dto.getBatchNumber());
         if (dto.getExpiryDate() != null) inventory.setExpiryDate(dto.getExpiryDate());
         if (dto.getReservedQuantity() != null) inventory.setReservedQuantity(dto.getReservedQuantity());
-
-        Inventory saved = repository.save(inventory);
-
-        ProductResponse product = productServiceClient.getProductById(saved.getProductId()).getBody(); 
-        return new InventoryResponse(saved, product);
+        return new InventoryResponse(repository.save(inventory), product);
     }
 
     public Page<InventoryResponse> getAllInventories(Pageable pageable) {
-        Page<Inventory> page = repository.findAll(pageable);
-        List<InventoryResponse> responseList = page.getContent()
-                .stream()
-                .map(inventory -> {
-                    ProductResponse product = productServiceClient.getProductById(inventory.getProductId()).getBody();
-                    return new InventoryResponse(inventory, product);
-                })
-                .collect(Collectors.toList());
-    
-        return new PageImpl<>(responseList, page.getPageable(), page.getTotalElements());
-    }
+    Page<Inventory> page = repository.findAll(pageable);
+    List<InventoryResponse> responseList = page.getContent()
+            .stream()
+            .map(inventory -> {
+                ProductResponse product = this.getProductById(inventory.getProductId());
+                return new InventoryResponse(inventory, product);
+            })
+            .collect(Collectors.toList());
+
+    return new PageImpl<>(responseList, page.getPageable(), page.getTotalElements());
+}
 
     public Inventory getPtoductInventory(Long productId, String sku) {        
         return this.getInventoryByProductIdAndSku(productId, sku);
@@ -115,7 +108,7 @@ public class InventoryService {
         List<Inventory> all = repository.findAll();
         List<InventoryResponse> low = all.stream()
                 .filter(inv -> inv.getQuantity() != null && inv.getMinStockLevel() != null && inv.getQuantity() <= inv.getMinStockLevel())
-                .map(inv -> new InventoryResponse(inv, productServiceClient.getProductById(inv.getProductId()).getBody()))
+                .map(inv -> new InventoryResponse(inv, this.getProductById(inv.getProductId())))
                 .collect(Collectors.toList());
 
         return new PageImpl<>(low);
@@ -197,6 +190,10 @@ public class InventoryService {
         return saved;
     }
 
+
+    private ProductResponse getProductById(Long productId) {
+        return productServiceClient.getProductById(productId).getBody();
+    }
 
     private Inventory getInventoryByProductIdAndSku(Long productId, String sku) {
         return repository.findByProductIdAndSkuCode(productId, sku)

@@ -1,4 +1,4 @@
-package com.e_Commerce.inventory_service.dto;
+package com.e_Commerce.inventory_service.dto.response;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,6 +20,7 @@ public class InventoryResponse {
     private String skuCode;
     private String productName;
     private String image;
+    private String imageAltText;
     private String productDescription;
     private BigDecimal productPrice;
     private String categoryName;
@@ -44,7 +45,8 @@ public class InventoryResponse {
         this.productPrice = product.getPrice();
         this.categoryName = product.getCategoryName();
         this.brandName = product.getBrandName();
-        this.image = product.getImages().getFirst().getImageUrl();
+        this.image = (product.getImages() != null && !product.getImages().isEmpty()) ? product.getImages().getFirst().getImageUrl() : null;
+        this.imageAltText = (product.getImages() != null && !product.getImages().isEmpty()) ? product.getImages().getFirst().getAltText() : null;
         this.quantity = inventory.getQuantity();
         this.reservedQuantity = inventory.getReservedQuantity();
         this.minStockLevel = inventory.getMinStockLevel();

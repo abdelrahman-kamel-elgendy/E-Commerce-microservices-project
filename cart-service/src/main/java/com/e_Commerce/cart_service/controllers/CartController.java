@@ -24,29 +24,25 @@ public class CartController {
     @Autowired
     ProductServiceClient productFeigns;
 
-    @PostMapping
-    public ResponseEntity<CartResponse> createOrGetCart(@RequestParam Long userId) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(cartService.getOrCreateCart(userId));
-    }
-
     @PostMapping("/add-to-cart")
-    public ResponseEntity<CartResponse> addItemToCart(
-        @RequestParam Long cartId, 
+    public ResponseEntity<CartResponse> addToCart(
+        @RequestParam Long userId, 
         @RequestParam Long productId, 
         @RequestParam String sku, 
         @RequestParam int quantity
     ) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(cartService.addItemToCart(cartId, sku, productId, quantity));
+        return ResponseEntity.status(HttpStatus.CREATED).body(cartService.addToCart(userId, sku, productId, quantity));
     }
 
     @PutMapping("/items")
     public ResponseEntity<CartResponse> updateItemQuantity(
         @RequestParam Long cartId, 
         @RequestParam Long productId,
+        @RequestParam String sku,
         @RequestParam int quantity
     ) {
 
-        return ResponseEntity.ok(cartService.updateItemQuantity(cartId, productId, quantity));
+        return ResponseEntity.ok(cartService.updateItemQuantity(cartId, productId, sku, quantity));
     }
 
     @DeleteMapping("/items")
@@ -67,11 +63,6 @@ public class CartController {
         return ResponseEntity.ok(cartService.convertToOrder(cartId));
     }
     
-    @PostMapping("/abandon")
-    public ResponseEntity<CartResponse> abandonCart(@RequestParam Long cartId) {
-        return ResponseEntity.ok(cartService.abandonCart(cartId));
-    }
-
 
     @GetMapping("/id")
     public ResponseEntity<CartResponse> getCart(@RequestParam Long cartId) {
@@ -80,6 +71,6 @@ public class CartController {
 
     @GetMapping("/user")
     public ResponseEntity<CartResponse> getUserCart(@RequestParam Long userId) {
-        return ResponseEntity.ok(cartService.getActiveCartByUserId(userId));
+        return ResponseEntity.ok(cartService.getCartResponseByUserId(userId));
     }
 }
