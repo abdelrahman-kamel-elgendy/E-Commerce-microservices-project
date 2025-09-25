@@ -26,10 +26,10 @@ public class StockReservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "inventory_id", nullable = false)
-    private Long inventoryId;
+    @Column(name = "inventory_item_id", nullable = false)
+    private Long inventoryItemId;
 
-    @Column(name = "order_id", nullable = false)
+    @Column(name = "order_id", nullable = false, unique = true)
     private Long orderId;
 
     @Column(name = "quantity", nullable = false)
@@ -39,19 +39,23 @@ public class StockReservation {
     @Enumerated(EnumType.STRING)
     private ReservationStatus status;
 
-    @Column(name = "expires_at")
-    private Instant expiresAt;
-
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @Column(name = "expires_at")
+    private Instant expiresAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
         updatedAt = Instant.now();
+        status = ReservationStatus.RESERVED;
+        if (expiresAt == null)
+            expiresAt = Instant.now().plusSeconds(24 * 60 * 60); // 24 hours
+
     }
 
     @PreUpdate
@@ -59,12 +63,10 @@ public class StockReservation {
         updatedAt = Instant.now();
     }
 
-    public StockReservation(Long inventoryId, Long orderId, Integer quantity) {
-        this.inventoryId = inventoryId;
+    public StockReservation(Long inventoryItemId, Long orderId, Integer quantity) {
+        this.inventoryItemId = inventoryItemId;
         this.orderId = orderId;
         this.quantity = quantity;
         this.status = ReservationStatus.RESERVED;
     }
 }
-
-

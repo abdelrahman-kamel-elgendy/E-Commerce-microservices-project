@@ -1,13 +1,11 @@
 package com.e_Commerce.cart_service.services;
 
-import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.e_Commerce.cart_service.dtos.CartItemResponse;
 import com.e_Commerce.cart_service.dtos.CartResponse;
@@ -19,7 +17,6 @@ import com.e_Commerce.cart_service.feigns.InventoryServiceClient;
 import com.e_Commerce.cart_service.feigns.ProductServiceClient;
 import com.e_Commerce.cart_service.models.Cart;
 import com.e_Commerce.cart_service.models.CartItem;
-import com.e_Commerce.cart_service.models.CartStatus;
 import com.e_Commerce.cart_service.repositories.CartItemRepository;
 import com.e_Commerce.cart_service.repositories.CartRepository;
 
@@ -57,7 +54,7 @@ public class CartService {
     }
 
     private Cart getCartByUserId(Long userId) {
-        return cartRepository.findActiveCartByUserId(userId)
+        return cartRepository.findCartByUserId(userId)
             .orElseThrow(() -> new ResourceNotFoundException("Active cart with user id: " + userId + " not found!"));
     }
     
@@ -86,7 +83,7 @@ public class CartService {
     }
 
     public CartResponse getCartResponseByUserId(Long userId) {
-        Cart cart = cartRepository.findActiveCartByUserId(userId)
+        Cart cart = cartRepository.findCartByUserId(userId)
             .orElseThrow(() -> new ResourceNotFoundException("Active cart with user id: " + userId + " not found!"));
 
         return new CartResponse(cart, this.getItemByCartId(cart.getId()));
@@ -105,7 +102,6 @@ public class CartService {
         Cart cart; 
         try {
             cart = this.getCartByUserId(userId);
-            cart.setStatus(CartStatus.ACTIVE);
             try {
                 CartItem item = this.getItemByCartIdAndProductId(cart.getId(), productId);
                 int newQuantity = item.getQuantity() + quantity;
@@ -183,48 +179,7 @@ public class CartService {
         return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
     }
 
-    public CartResponse mergeCarts(Long sourceCartId, Long targetCartId) {
-        Cart sourceCart = getCartById(sourceCartId);
-        Cart targetCart = getCartById(targetCartId);
-        
-        for (CartItem sourceItem : sourceCart.getItems()) {
-
-            try {
-                CartItem item = this.getItemByCartIdAndProductId(targetCartId, sourceItem.getProductId());
-                
-                item.increaseQuantity(sourceItem.getQuantity());
-                cartItemRepository.save(item);
-            } catch(ResponseStatusException ex) {                
-                targetCart.addItem(
-                    cartItemRepository.save(
-                        new CartItem(
-                            targetCart,
-                            sourceItem.getProductId(),
-                            sourceItem.getQuantity()
-                        )
-                    )
-                );
-            }
-        }
-        
-        sourceCart.setStatus(CartStatus.MERGED);
-        cartRepository.save(sourceCart);
-
-        return new CartResponse(cartRepository.save(targetCart), this.getItemByCartId(targetCartId));
-    }
-
-    public CartResponse convertToOrder(Long cartId) {
-        Cart cart = getCartById(cartId);
-        cart.setStatus(CartStatus.CONVERTED_TO_ORDER);
-        return new CartResponse(cartRepository.save(cart), this.getItemByCartId(cartId));
-    }
-
     public List<Cart> getUserCarts(Long userId) {
         return cartRepository.findByUserId(userId);
-    }
-
-    public void cleanupExpiredCarts() {
-        Instant threshold = Instant.now().minus(Duration.ofDays(30));
-        cartRepository.expireOldCarts(threshold);
     }
 }

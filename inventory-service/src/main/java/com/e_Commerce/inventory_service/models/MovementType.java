@@ -5,5 +5,6 @@ public enum MovementType {
     OUTBOUND, 
     ADJUSTMENT, 
     RESERVATION, 
-    RELEASE
+    RELEASE, 
+    TRANSFER
 }

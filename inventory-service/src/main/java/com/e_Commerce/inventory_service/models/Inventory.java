@@ -1,12 +1,17 @@
 package com.e_Commerce.inventory_service.models;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -24,35 +29,26 @@ public class Inventory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "product_id", nullable = false)
-    private Long productId;
+    @Column(name = "code", unique = true, nullable = false)
+    private String code;
 
-    @Column(name = "sku_code", nullable = false, unique = true)
-    private String skuCode;
+    @Column(name = "name", nullable = false, unique = true)
+    private String name;
 
-    @Column(name = "quantity", nullable = false)
-    private Integer quantity;
+    @Column(name = "address", nullable = false)
+    private String address;
 
-    @Column(name = "min_stock_level")
-    private Integer minStockLevel = 10;
-    
-    @Column(name = "max_stock_level")
-    private Integer maxStockLevel = 1000;
-    
-    @Column(name = "reorder_point")
-    private Integer reorderPoint = 50;
-    
-    @Column(name = "location")
-    private String location;
-    
-    @Column(name = "batch_number")
-    private String batchNumber;
-    
-    @Column(name = "expiry_date")
-    private Instant expiryDate;
-    
-    @Column(name = "reserved_quantity", nullable = false)
-    private Integer reservedQuantity;
+    @Column(name = "city", nullable = false)
+    private String city;
+
+    @Column(name = "country", nullable = false)
+    private String country;
+
+    @Column(name = "postal_code", nullable = false)
+    private String postalCode;
+
+    @Column(name = "is_active", nullable = false)
+    private Boolean active;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
@@ -60,11 +56,14 @@ public class Inventory {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
+    @OneToMany(mappedBy = "inventory", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<InventoryItem> items = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         createdAt = Instant.now();
         updatedAt = Instant.now();
-        reservedQuantity = 0;
+        active = true;
     }
 
     @PreUpdate
@@ -72,9 +71,12 @@ public class Inventory {
         updatedAt = Instant.now();
     }
 
-    public Inventory(Long productId, String skuCode, Integer quantity) {
-        this.productId = productId;
-        this.skuCode = skuCode;
-        this.quantity = quantity;
+    public Inventory(String name, String code, String address, String city, String country, String postalCode) {
+        this.name = name;
+        this.code = code;
+        this.address = address;
+        this.city = city;
+        this.country = country;
+        this.postalCode = postalCode;
     }
 }

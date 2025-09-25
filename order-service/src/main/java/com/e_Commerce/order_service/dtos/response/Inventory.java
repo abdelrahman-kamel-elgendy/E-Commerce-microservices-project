@@ -1,4 +1,4 @@
-package com.e_Commerce.cart_service.dtos;
+package com.e_Commerce.order_service.dtos.response;
 
 import java.time.Instant;
 

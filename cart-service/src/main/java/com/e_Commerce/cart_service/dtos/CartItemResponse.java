@@ -11,6 +11,7 @@ public class CartItemResponse {
     private Long id;
     private Long productId;
     private String productName;
+    private String productSku;
     private BigDecimal unitPrice;
     private Integer quantity;
     private BigDecimal totalPrice;
@@ -21,6 +22,7 @@ public class CartItemResponse {
         this.id = id;
         this.productId = product.getId(); 
         this.productName = product.getName();
+        this.productSku = product.getSku();
         this.unitPrice = product.getPrice();
         this.quantity = quantity;
         this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
