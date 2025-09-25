@@ -57,12 +57,7 @@ public class CartController {
     public ResponseEntity<CartResponse> clearCart(@RequestParam Long cartId) {
         return ResponseEntity.ok(cartService.clearCart(cartId));
     }
-    
-    @PostMapping("/order")
-    public ResponseEntity<CartResponse> convertToOrder(@RequestParam Long cartId) {
-        return ResponseEntity.ok(cartService.convertToOrder(cartId));
-    }
-    
+        
 
     @GetMapping("/id")
     public ResponseEntity<CartResponse> getCart(@RequestParam Long cartId) {

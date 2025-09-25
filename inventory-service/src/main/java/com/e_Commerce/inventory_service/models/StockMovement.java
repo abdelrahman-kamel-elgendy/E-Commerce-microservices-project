@@ -6,9 +6,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -23,8 +26,9 @@ public class StockMovement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "inventory_id", nullable = false)
-    private Long inventoryId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventory_item_id", nullable = false)
+    private InventoryItem inventoryItem;
 
     @Column(name = "movement_type", nullable = false)
     @Enumerated(EnumType.STRING)
@@ -45,20 +49,15 @@ public class StockMovement {
     @Column(name = "created_by")
     private String createdBy;
 
-    @PrePersist
-    protected void onCreate() {
-        createdAt = Instant.now();
-    }
-
-    public StockMovement(Long inventoryId, MovementType movementType, Integer quantity, String reason) {
-        this.inventoryId = inventoryId;
+    public StockMovement(InventoryItem inventoryItem, MovementType movementType, Integer quantity, String reason) {
+        this.inventoryItem = inventoryItem;
         this.movementType = movementType;
         this.quantity = quantity;
         this.reason = reason;
     }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = Instant.now();
+    }
 }
-
-
-
-
-

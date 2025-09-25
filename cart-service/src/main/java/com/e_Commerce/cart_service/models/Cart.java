@@ -7,8 +7,6 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -37,10 +35,6 @@ public class Cart {
     @Column(unique = true, nullable = false)
     private Long userId;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "status")
-    private CartStatus status;
-
     @Column(name = "item_count")
     private Integer itemCount = 0;
 
@@ -59,7 +53,6 @@ public class Cart {
 
     public Cart(Long userId) {
         this.userId = userId;
-        this.status = CartStatus.ACTIVE;
     }
 
     @PrePersist

@@ -5,7 +5,6 @@ import java.time.Instant;
 import java.util.List;
 
 import com.e_Commerce.cart_service.models.Cart;
-import com.e_Commerce.cart_service.models.CartStatus;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -15,7 +14,6 @@ import lombok.Setter;
 public class CartResponse {
     private Long id;
     private Long userId;
-    private CartStatus status;
     private BigDecimal totalAmount = BigDecimal.ZERO;
     private Integer itemCount;
     private Instant createdAt;
@@ -25,7 +23,6 @@ public class CartResponse {
     public CartResponse(Cart cart, List<CartItemResponse> items) {
         this.id = cart.getId();
         this.userId = cart.getUserId();
-        this.status = cart.getStatus();
         this.items = items;
         this.itemCount = cart.getItemCount();
         this.createdAt = cart.getCreatedAt();
