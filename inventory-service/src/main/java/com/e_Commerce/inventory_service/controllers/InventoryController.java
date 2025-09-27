@@ -52,12 +52,13 @@ public class InventoryController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<InventoryResponse> updateInventory(@PathVariable Long id,
+    public ResponseEntity<InventoryResponse> updateInventory(
+            @PathVariable Long id,
             @Valid @RequestBody UpdateInventory request) {
         return ResponseEntity.ok(inventoryService.updateInventory(id, request));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/status/{id}")
     public ResponseEntity<InventoryResponse> updateInventoryStatus(@PathVariable Long id, boolean status) {
         return ResponseEntity.ok(inventoryService.updateInventoryStatus(id, status));
     }

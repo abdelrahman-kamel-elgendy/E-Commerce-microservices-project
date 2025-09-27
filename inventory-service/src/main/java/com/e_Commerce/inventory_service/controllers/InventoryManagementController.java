@@ -19,8 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.e_Commerce.inventory_service.dto.request.StockAdjustmentRequest;
 import com.e_Commerce.inventory_service.dto.response.InventoryItemResponse;
 import com.e_Commerce.inventory_service.dto.response.StockLevelResponse;
-import com.e_Commerce.inventory_service.models.StockMovement;
-import com.e_Commerce.inventory_service.models.StockReservation;
+import com.e_Commerce.inventory_service.dto.response.StockReservationResponse;
 import com.e_Commerce.inventory_service.services.InventoryManagementService;
 
 import jakarta.validation.Valid;
@@ -33,9 +32,8 @@ public class InventoryManagementController {
 
     @GetMapping("/stock-level")
     public ResponseEntity<StockLevelResponse> getStockLevel(
-            @RequestParam Long productId,
             @RequestParam String sku) {
-        return ResponseEntity.ok(inventoryManagementService.getStockLevel(productId, sku));
+        return ResponseEntity.ok(inventoryManagementService.getStockLevel(sku));
     }
 
     @GetMapping("/low-stock")
@@ -62,16 +60,14 @@ public class InventoryManagementController {
 
     @GetMapping("/check-availability")
     public ResponseEntity<Map<String, Object>> checkAvailability(
-            @RequestParam Long productId,
             @RequestParam String sku,
             @RequestParam Integer quantity) {
 
         try {
-            StockLevelResponse stockLevel = inventoryManagementService.getStockLevel(productId, sku);
+            StockLevelResponse stockLevel = inventoryManagementService.getStockLevel(sku);
             boolean isAvailable = stockLevel.getTotalAvailableQuantity() >= quantity;
 
             Map<String, Object> response = new HashMap<>();
-            response.put("productId", productId);
             response.put("sku", sku);
             response.put("requestedQuantity", quantity);
             response.put("availableQuantity", stockLevel.getTotalAvailableQuantity());
@@ -84,7 +80,6 @@ public class InventoryManagementController {
 
         } catch (Exception e) {
             Map<String, Object> response = new HashMap<>();
-            response.put("productId", productId);
             response.put("sku", sku);
             response.put("requestedQuantity", quantity);
             response.put("isAvailable", false);
@@ -93,21 +88,12 @@ public class InventoryManagementController {
         }
     }
 
-    @GetMapping("/{inventoryId}/{productId}/movements")
-    public ResponseEntity<Page<StockMovement>> getItemMovementHistory(
-            @PathVariable Long inventoryId,
-            @PathVariable Long productId,
-            Pageable pageable) {
-        return ResponseEntity.ok(inventoryManagementService.getItemMovementHistory(inventoryId, productId, pageable));
-    }
-
     @GetMapping("/reserve")
-    public ResponseEntity<List<StockReservation>> reserveStock(
-            @RequestParam Long productId,
+    public ResponseEntity<List<StockReservationResponse>> reserveStock(
             @RequestParam String sku,
             @RequestParam int quantity,
             @RequestParam Long orderId) {
-        return ResponseEntity.ok(inventoryManagementService.reserveStock(productId, sku, quantity, orderId));
+        return ResponseEntity.ok(inventoryManagementService.reserveStock(sku, quantity, orderId));
     }
 
 }

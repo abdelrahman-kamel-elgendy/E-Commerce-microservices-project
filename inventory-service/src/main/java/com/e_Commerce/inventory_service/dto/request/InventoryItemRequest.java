@@ -20,10 +20,6 @@ public class InventoryItemRequest {
     @Min(value = 1, message = "Inventory ID must be positive")
     private Long inventoryId;
 
-    @NotNull(message = "Product ID is required")
-    @Min(value = 1, message = "Product ID must be positive")
-    private Long productId;
-
     @NotBlank(message = "SKU is required")
     @Pattern(regexp = "^[A-Z0-9-]+$", message = "SKU must contain only uppercase letters, numbers, and hyphens")
     private String sku;
