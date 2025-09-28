@@ -2,14 +2,15 @@ package com.e_Commerce.order_service.models;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -31,27 +32,41 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
-
     @Column(name = "order_number", unique = true, nullable = false)
     private String orderNumber;
+
+    @Column(name = "user_id", nullable = false, updatable = false)
+    private Long userId;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
     private OrderStatus status;
 
-    @Column(name = "total_amount", nullable = false, precision = 10, scale = 2)
+    @Column(name = "total_amount", precision = 10, scale = 2, nullable = false)
     private BigDecimal totalAmount;
 
+    @Column(name = "subtotal_amount", precision = 10, scale = 2, nullable = false)
+    private BigDecimal subtotalAmount;
+
+    @Column(name = "tax_amount", precision = 10, scale = 2, nullable = false)
+    private BigDecimal taxAmount;
+
+    @Column(name = "shipping_amount", precision = 10, scale = 2, nullable = false)
+    private BigDecimal shippingAmount;
+
+    @Column(name = "discount_amount", precision = 10, scale = 2)
+    private BigDecimal discountAmount;
+
+    private Instant shippedDate;
+
+    private Instant deliveredDate;
+
+    @Embedded
     @Column(name = "shipping_address", nullable = false, length = 500)
-    private String shippingAddress;
+    private ShippingAddress shippingAddress;
 
-    @Column(name = "customer_email", nullable = false)
-    private String customerEmail;
-
-    @Column(name = "customer_phone")
-    private String customerPhone;
+    @Column(length = 500)
+    private String notes;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
@@ -59,20 +74,45 @@ public class Order {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<OrderItem> orderItems;
+    @Column(name = "payment_id", nullable = false, updatable = false, unique = true)
+    private String paymentId; // Reference to payment service
 
-    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    private List<OrderStatusHistory> statusHistory;
+    @Column(name = "cart_id", nullable = false, updatable = false, unique = true)
+    private String cartId; // Reference to cart service
+
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<OrderItem> orderItems = new ArrayList<>();
+
+    public Order(String orderNumber, Long userId) {
+        this.orderNumber = orderNumber;
+        this.userId = userId;
+    }
 
     @PrePersist
     protected void onCreate() {
+        this.status = OrderStatus.PENDING;
         this.createdAt = Instant.now();
         this.updatedAt = Instant.now();
+
+        this.totalAmount = BigDecimal.ZERO;
+        this.subtotalAmount = BigDecimal.ZERO;
+        this.taxAmount = BigDecimal.ZERO;
+        this.shippingAmount = BigDecimal.ZERO;
+        this.discountAmount = BigDecimal.ZERO;
     }
 
     @PreUpdate
     public void preUpdate() {
         this.updatedAt = Instant.now();
+    }
+
+    public void addOrderItem(OrderItem item) {
+        orderItems.add(item);
+        item.setOrder(this);
+    }
+
+    public void removeOrderItem(OrderItem item) {
+        orderItems.remove(item);
+        item.setOrder(null);
     }
 }

@@ -181,6 +181,7 @@ public class InventoryManagementService {
                     // Create new item in target inventory
                     InventoryItem newItem = new InventoryItem(
                             targetInventory,
+                            sourceItem.getProductId(),
                             sourceItem.getSku(),
                             0);
                     newItem.setMinStockLevel(sourceItem.getMinStockLevel());

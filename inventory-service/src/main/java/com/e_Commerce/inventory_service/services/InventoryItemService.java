@@ -59,6 +59,7 @@ public class InventoryItemService {
         // Create new inventory item
         InventoryItem item = new InventoryItem(
                 inventory,
+                request.getProductId(),
                 request.getSku(),
                 request.getQuantity());
 

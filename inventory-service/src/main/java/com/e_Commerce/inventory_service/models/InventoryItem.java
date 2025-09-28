@@ -35,6 +35,9 @@ public class InventoryItem {
     @JoinColumn(name = "inventory_id", nullable = false)
     private Inventory inventory;
 
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
+
     @Column(name = "sku", nullable = false)
     private String sku;
 
@@ -91,7 +94,7 @@ public class InventoryItem {
         updatedAt = Instant.now();
     }
 
-    public InventoryItem(Inventory inventory, String sku, Integer quantity) {
+    public InventoryItem(Inventory inventory, Long productId, String sku, Integer quantity) {
         this.inventory = inventory;
         this.sku = sku;
         this.quantity = quantity;

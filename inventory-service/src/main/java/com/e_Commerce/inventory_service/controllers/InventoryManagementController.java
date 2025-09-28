@@ -95,5 +95,4 @@ public class InventoryManagementController {
             @RequestParam Long orderId) {
         return ResponseEntity.ok(inventoryManagementService.reserveStock(sku, quantity, orderId));
     }
-
 }
