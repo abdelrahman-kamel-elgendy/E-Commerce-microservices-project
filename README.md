@@ -2,6 +2,7 @@
 
 A modern, scalable backend E-Commerce platform built with Java Spring Boot, PostgreSQL, and Microservices Architecture. This project showcases a modular, production-ready setup for an online marketplace, featuring comprehensive order management, payment processing, and inventory tracking.
 
+
 ## 🚀 Key Features
 
 - **Microservices Architecture** - Each service is isolated and independently deployable
@@ -15,6 +16,7 @@ A modern, scalable backend E-Commerce platform built with Java Spring Boot, Post
 - **Inventory Management** - Real-time stock tracking with a reservation system
 - **Notification System** - Email and in-app notifications for order updates
 - **Comprehensive APIs** - RESTful APIs covering all e-commerce operations
+
 
 ## 🏗️ Architecture Overview
 ```
@@ -64,6 +66,7 @@ ecommerce-microservices/
 └── notification-service/        # Email and notification system
 ```
 
+
 ## 🛠️ Technology Stack
 - **Java 17** - Primary programming language
 - **Spring Boot 3.x** - Application framework
@@ -77,6 +80,7 @@ ecommerce-microservices/
 - **Kafka** - Event-driven messaging
 - **Stripe API** - Payment processing
 - **Maven** - Dependency management
+
 
 ## 📁 Services Overview
 **1. API Gateway (api-gateway/)**
