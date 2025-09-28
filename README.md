@@ -2,19 +2,19 @@
 
 A backend E-Commerce platform built with Java Spring Boot, PostgreSQL, and Microservices Architecture. This project demonstrates a modular, scalable, and production-ready setup for an online marketplace.
 
-## Features
-
-- **User Service**: Authentication, authorization (JWT), user profiles, addresses
-- **Product Service**: Product catalog, categories, filtering
-- **Inventory Service**: Stock management, synchronization with orders
-- **Cart Service**: Add/remove/update items in shopping cart
-- **Order Service**: Checkout, order history, order status tracking
-- **Payment Service**: Simulated payment gateway integration
-- **Notification Service**: Email notifications for order updates
-- **API Gateway**: Single entry point for all services
-- **Registery Service**: Dynamic service registration & discovery with Eureka
-- **Database**: PostgreSQL (separate schema per service)
-- **Security**: Spring Security + JWT
+## Key Features Implemented:
+- **Microservices Architecture** - Each service is isolated and independently deployable
+- **JWT Security** - Secure authentication and authorization
+- **API Gateway** - Single entry point with routing and security
+- **Service Discovery** - Eureka for service registration and discovery
+- **Database Per Service** - Each service has its own database
+- **Feign Clients** - For inter-service communication
+- **Event-Driven Architecture** - Using Kafka for asynchronous communication
+- **Payment Integration** - Stripe integration for payment processing
+- **Inventory Management** - Stock tracking with reservations
+- **Notification System** - Email and in-app notifications
+- **Comprehensive APIs** - RESTful APIs for all e-commerce operations
+This architecture provides a scalable, maintainable, and modern e-commerce backend that can handle high traffic and complex business requirements.
 
 ## Tech Stack
 
