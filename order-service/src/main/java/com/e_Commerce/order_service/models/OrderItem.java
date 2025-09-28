@@ -2,8 +2,6 @@ package com.e_Commerce.order_service.models;
 
 import java.math.BigDecimal;
 
-import com.e_Commerce.order_service.dtos.response.CartItemResponse;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -37,9 +35,6 @@ public class OrderItem {
     @Column(name = "product_sku", nullable = false)
     private String sku;
 
-    @Column(name = "product_name", nullable = false)
-    private String productName;
-
     @Column(name = "quantity", nullable = false)
     private Integer quantity;
 
@@ -49,13 +44,10 @@ public class OrderItem {
     @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
 
-    public OrderItem(Order order, CartItemResponse item) {
-        this.order = order;
-        this.productId = item.getProductId();
-        this.sku = item.getProductSku();
-        this.productName = item.getProductName();
-        this.quantity = item.getQuantity();
-        this.unitPrice = item.getUnitPrice();
-        this.totalPrice = item.getTotalPrice();
+    public OrderItem(Long productId, String productName, Integer quantity, BigDecimal unitPrice) {
+        this.productId = productId;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.totalPrice = unitPrice.multiply(BigDecimal.valueOf(quantity));
     }
 }

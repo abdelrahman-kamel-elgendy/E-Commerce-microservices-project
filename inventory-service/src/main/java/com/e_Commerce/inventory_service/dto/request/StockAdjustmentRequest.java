@@ -23,7 +23,7 @@ public class StockAdjustmentRequest {
     private Integer quantity;
 
     @NotNull(message = "Cereated by email is required")
-    private String CreatedBy;
+    private String createdBy;
 
     private String reason;
     private String referenceId;

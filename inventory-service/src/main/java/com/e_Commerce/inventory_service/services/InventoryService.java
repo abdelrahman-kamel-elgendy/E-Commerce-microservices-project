@@ -73,6 +73,12 @@ public class InventoryService {
 
     public InventoryResponse updateInventoryStatus(Long id, boolean status) {
         Inventory inventory = this.findInventoryById(id);
+        if(inventory.getActive() && status)
+            throw new ResourceAlreadyExistsException("Inventory is already active");
+
+        if (!inventory.getActive() && !status)
+            throw new ResourceAlreadyExistsException("Inventory is already not active");
+
         inventory.setActive(status);
         return new InventoryResponse(inventoryRepository.save(inventory));
     }

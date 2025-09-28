@@ -12,12 +12,16 @@ import feign.Param;
 
 public interface StockReservationRepository extends JpaRepository<StockReservation, Long> {
     List<StockReservation> findByOrderId(Long orderId);
+
     List<StockReservation> findByInventoryItemId(Long inventoryItemId);
+
     Optional<StockReservation> findByOrderIdAndInventoryItemId(Long orderId, Long inventoryItemId);
-    
+
+    boolean existsByInventoryItemIdAndOrderId(Long inventoryItemId, Long orderId);
+
     @Query("SELECT SUM(sr.quantity) FROM StockReservation sr WHERE sr.inventoryItem.id = :inventoryItemId AND sr.status = 'RESERVED'")
     Integer sumReservedQuantityByInventoryItemId(@Param("inventoryItemId") Long inventoryItemId);
-    
+
     @Query("SELECT sr FROM StockReservation sr WHERE sr.status = 'RESERVED' AND sr.expiresAt < CURRENT_TIMESTAMP")
     List<StockReservation> findExpiredReservations();
 }

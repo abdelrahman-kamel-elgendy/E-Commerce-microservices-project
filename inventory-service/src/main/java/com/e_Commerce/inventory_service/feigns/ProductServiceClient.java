@@ -9,6 +9,5 @@ import org.springframework.web.bind.annotation.RequestParam;
 public interface ProductServiceClient {
     @GetMapping("/api/products/check")
     public ResponseEntity<Boolean> checkProductExistence(
-            @RequestParam Long id,
             @RequestParam String sku);
 }

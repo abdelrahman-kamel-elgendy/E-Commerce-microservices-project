@@ -14,7 +14,10 @@ import org.springframework.stereotype.Service;
 import com.e_Commerce.inventory_service.dto.request.StockAdjustmentRequest;
 import com.e_Commerce.inventory_service.dto.response.InventoryItemResponse;
 import com.e_Commerce.inventory_service.dto.response.StockLevelResponse;
+import com.e_Commerce.inventory_service.dto.response.StockReservationResponse;
+import com.e_Commerce.inventory_service.exceptions.BadRequestException;
 import com.e_Commerce.inventory_service.exceptions.InsufficientStockException;
+import com.e_Commerce.inventory_service.exceptions.ResourceAlreadyExistsException;
 import com.e_Commerce.inventory_service.exceptions.ResourceNotFoundException;
 import com.e_Commerce.inventory_service.models.Inventory;
 import com.e_Commerce.inventory_service.models.InventoryItem;
@@ -106,13 +109,13 @@ public class InventoryManagementService {
         return new InventoryItemResponse(updatedItem);
     }
 
-    public StockLevelResponse getStockLevel(Long productId, String sku) {
+    public StockLevelResponse getStockLevel(String sku) {
         // Find all inventory items for this product/SKU
-        List<InventoryItem> items = inventoryItemRepository.findByProductIdAndSkuAndActiveTrue(productId, sku);
+        List<InventoryItem> items = inventoryItemRepository.findBySkuAndActiveTrue(sku);
 
         if (items.isEmpty())
             throw new ResourceNotFoundException(
-                    "No inventory items found for product: " + productId + " and SKU: " + sku);
+                    "No inventory items found for SKU: " + sku);
 
         // Calculate total quantities across all inventories
         int totalQuantity = items.stream().mapToInt(InventoryItem::getQuantity).sum();
@@ -140,7 +143,6 @@ public class InventoryManagementService {
                 .collect(Collectors.toList());
 
         return new StockLevelResponse(
-                productId,
                 sku,
                 totalQuantity,
                 totalReserved,
@@ -174,7 +176,7 @@ public class InventoryManagementService {
 
         // Find or create target item
         InventoryItem targetItem = inventoryItemRepository
-                .findByInventoryIdAndProductIdAndSku(toInventoryId, sourceItem.getProductId(), sourceItem.getSku())
+                .findByInventoryIdAndSku(toInventoryId, sourceItem.getSku())
                 .orElseGet(() -> {
                     // Create new item in target inventory
                     InventoryItem newItem = new InventoryItem(
@@ -212,21 +214,26 @@ public class InventoryManagementService {
         return new InventoryItemResponse(sourceItem);
     }
 
-    public Page<StockMovement> getItemMovementHistory(Long inventoryId, Long productId, Pageable pageable) {
-        return stockMovementRepository.findByInventoryItemIdAndProductId(inventoryId, productId, pageable);
+    public Page<StockMovement> getItemMovementHistory(Long inventoryId, String sku, Pageable pageable) {
+        return stockMovementRepository.findByInventoryIdAndSku(inventoryId, sku, pageable);
     }
 
-    public List<StockReservation> reserveStock(Long productId, String sku, int quantity, Long orderId) {
+    public List<StockReservationResponse> reserveStock(String sku, int quantity, Long orderId) {
+        if (quantity < 1)
+            throw new BadRequestException("Quantity must be greater than 0!");
+
         // Find available inventory items
         List<InventoryItem> items = inventoryItemRepository
-                .findByProductIdAndSkuAndActiveTrue(productId, sku)
+                .findBySkuAndActiveTrue(sku)
                 .stream()
-                .sorted(Comparator.comparing(InventoryItem::getExpiryDate)) // FIFO or expiry-based
+                .sorted(Comparator.comparing(
+                        InventoryItem::getExpiryDate,
+                        Comparator.nullsLast(Comparator.naturalOrder())))
                 .collect(Collectors.toList());
 
         if (items.isEmpty())
             throw new ResourceNotFoundException(
-                    "No available stock found for product: " + productId + ", SKU: " + sku);
+                    "No available stock found for SKU: " + sku);
 
         int totalAvailable = items.stream().mapToInt(InventoryItem::getAvailableQuantity).sum();
 
@@ -247,7 +254,14 @@ public class InventoryManagementService {
             int reserveFromItem = Math.min(availableInItem, remainingToReserve);
 
             item.setReservedQuantity(item.getReservedQuantity() + reserveFromItem);
-            reservations.add(new StockReservation(item.getId(), orderId, reserveFromItem));
+            if (stockReservationRepository.existsByInventoryItemIdAndOrderId(item.getId(), orderId))
+                throw new ResourceAlreadyExistsException("Order with order id: " + orderId + " for item with id: "
+                        + item.getId() + " is already exists!");
+
+            if (reserveFromItem <= 0)
+                continue;
+
+            reservations.add(new StockReservation(item, orderId, reserveFromItem));
 
             updatedItems.add(item);
             remainingToReserve -= reserveFromItem;
@@ -255,7 +269,9 @@ public class InventoryManagementService {
 
         // Save updated items
         inventoryItemRepository.saveAll(updatedItems);
-        return stockReservationRepository.saveAll(reservations);
+        return stockReservationRepository.saveAll(reservations).stream()
+                .map(reservation -> new StockReservationResponse(reservation))
+                .collect(Collectors.toList());
     }
 
     private InventoryItem findItemById(Long inventoryItemId) {

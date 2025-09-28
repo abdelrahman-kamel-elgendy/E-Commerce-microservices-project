@@ -18,11 +18,13 @@ import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Getter
 @Setter
+@NoArgsConstructor
 @Table(name = "inventory_items")
 public class InventoryItem {
     @Id
@@ -94,7 +96,6 @@ public class InventoryItem {
 
     public InventoryItem(Inventory inventory, Long productId, String sku, Integer quantity) {
         this.inventory = inventory;
-        this.productId = productId;
         this.sku = sku;
         this.quantity = quantity;
     }

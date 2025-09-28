@@ -11,10 +11,12 @@ import feign.Param;
 
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
     List<OrderItem> findByOrderId(Long orderId);
-    
-    @Query("SELECT oi FROM OrderItem oi WHERE oi.productId = :productId")
-    List<OrderItem> findByProductId(@Param("productId") Long productId);
-    
-    @Query("SELECT SUM(oi.quantity) FROM OrderItem oi WHERE oi.productId = :productId")
-    Long getTotalQuantitySoldByProductId(@Param("productId") Long productId);
+
+    List<OrderItem> findByProductId(Long productId);
+
+    @Query("SELECT oi FROM OrderItem oi WHERE oi.order.id IN :orderIds")
+    List<OrderItem> findByOrderIds(@Param("orderIds") List<Long> orderIds);
+
+    @Query("SELECT oi.productId, SUM(oi.quantity) FROM OrderItem oi GROUP BY oi.productId")
+    List<Object[]> findProductSales();
 }

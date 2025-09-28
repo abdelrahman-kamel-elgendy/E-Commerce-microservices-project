@@ -16,7 +16,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.e_commerce.user_service.Security.JwtUtils;
 import com.e_commerce.user_service.dtos.user.JwtResponseDto;
 import com.e_commerce.user_service.dtos.user.LoginDto;
 import com.e_commerce.user_service.dtos.user.RegisterDto;
@@ -44,8 +43,6 @@ public class UserService {
     @Autowired
     AuthenticationManager authenticationManager;
     
-    @Autowired
-    JwtUtils jwtUtils;
 
     @Autowired
     TokenRepository tokenRepository;

@@ -10,7 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StockLevelResponse {
-    private Long productId;
     private String sku;
     private Integer totalQuantity;
     private Integer totalReservedQuantity;

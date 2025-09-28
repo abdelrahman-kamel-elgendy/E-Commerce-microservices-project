@@ -6,9 +6,12 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -26,10 +29,11 @@ public class StockReservation {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "inventory_item_id", nullable = false)
-    private Long inventoryItemId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "inventory_item_id")
+    private InventoryItem inventoryItem;
 
-    @Column(name = "order_id", nullable = false, unique = true)
+    @Column(name = "order_id", nullable = false)
     private Long orderId;
 
     @Column(name = "quantity", nullable = false)
@@ -63,8 +67,8 @@ public class StockReservation {
         updatedAt = Instant.now();
     }
 
-    public StockReservation(Long inventoryItemId, Long orderId, Integer quantity) {
-        this.inventoryItemId = inventoryItemId;
+    public StockReservation(InventoryItem inventoryItem, Long orderId, Integer quantity) {
+        this.inventoryItem = inventoryItem;
         this.orderId = orderId;
         this.quantity = quantity;
         this.status = ReservationStatus.RESERVED;

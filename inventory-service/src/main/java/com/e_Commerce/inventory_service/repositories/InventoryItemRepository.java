@@ -11,15 +11,13 @@ import org.springframework.data.jpa.repository.Query;
 import com.e_Commerce.inventory_service.models.InventoryItem;
 
 public interface InventoryItemRepository extends JpaRepository<InventoryItem, Long> {
-    boolean existsByInventoryIdAndProductIdAndSku(Long inventoryId, Long productId, String sku);
+    boolean existsByInventoryIdAndSku(Long inventoryId, String sku);
 
-    List<InventoryItem> findByProductIdAndSkuAndActiveTrue(Long productId, String sku);
+    List<InventoryItem> findBySkuAndActiveTrue(String sku);
 
     Page<InventoryItem> findByInventoryId(Long inventoryId, Pageable pageable);
 
-    Optional<InventoryItem> findByInventoryIdAndProductIdAndSku(Long inventoryId, Long productId, String sku);
-
-    Optional<InventoryItem> findByInventoryIdAndProductId(Long id, Long valueOf);
+    Optional<InventoryItem> findByInventoryIdAndSku(Long inventoryId, String sku);
 
     @Query("SELECT i FROM InventoryItem i WHERE i.active = true AND (i.quantity - i.reservedQuantity) <= i.minStockLevel")
     Page<InventoryItem> findLowStockItems(Pageable pageable);

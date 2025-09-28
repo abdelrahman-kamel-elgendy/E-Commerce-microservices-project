@@ -52,10 +52,9 @@ public class ProductController {
 
     @GetMapping("/check")
     public ResponseEntity<Boolean> checkProductExistence(
-        @RequestParam Long id,
         @RequestParam String sku
     ) {
-        return ResponseEntity.ok(productService.existsByIdAndSku(id, sku));
+        return ResponseEntity.ok(productService.existsBySku(sku));
     }
 
     @GetMapping("/category")

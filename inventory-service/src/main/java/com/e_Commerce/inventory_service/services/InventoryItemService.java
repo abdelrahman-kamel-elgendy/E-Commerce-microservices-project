@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import com.e_Commerce.inventory_service.dto.request.InventoryItemRequest;
 import com.e_Commerce.inventory_service.dto.request.UpdateInventoryItemRequest;
 import com.e_Commerce.inventory_service.dto.response.InventoryItemResponse;
-import com.e_Commerce.inventory_service.exceptions.BadRequestException;
 import com.e_Commerce.inventory_service.exceptions.ResourceAlreadyExistsException;
 import com.e_Commerce.inventory_service.exceptions.ResourceNotFoundException;
 import com.e_Commerce.inventory_service.feigns.ProductServiceClient;
@@ -46,14 +45,14 @@ public class InventoryItemService {
         Inventory inventory = this.findInventoryById(request.getInventoryId());
 
         // Validate product exists via Product Service
-        if (!productServiceClient.checkProductExistence(request.getProductId(), request.getSku()).getBody()) {
+        if (!productServiceClient.checkProductExistence(request.getSku()).getBody()) {
             throw new ResourceNotFoundException(
-                    "No product found with id: " + request.getProductId() + " and SKU: " + request.getSku());
+                    "No product found with SKU: " + request.getSku());
         }
 
         // Check if item already exists in this inventory
-        if (inventoryItemRepository.existsByInventoryIdAndProductIdAndSku(
-                request.getInventoryId(), request.getProductId(), request.getSku())) {
+        if (inventoryItemRepository.existsByInventoryIdAndSku(
+                request.getInventoryId(), request.getSku())) {
             throw new ResourceAlreadyExistsException("Item already exists in this inventory!");
         }
 
@@ -116,7 +115,7 @@ public class InventoryItemService {
         InventoryItem item = this.findItemById(id);
 
         if (!item.getActive() && !status)
-            throw new ResourceNotFoundException("Item is already deleted");
+            throw new ResourceNotFoundException("Item is already not active");
 
         if (item.getActive() && status)
             throw new ResourceAlreadyExistsException("Item is already active");
@@ -142,13 +141,9 @@ public class InventoryItemService {
     public InventoryItemResponse updateInventoryItem(Long id, UpdateInventoryItemRequest request) {
         InventoryItem inventoryItem = this.findItemById(id);
 
-        if (request.getMaxStockLevel() != null && request.getMaxStockLevel() < inventoryItem.getQuantity())
-            throw new BadRequestException("Max stock level must be greatter than current quantity!");
-        else
+        if (request.getMaxStockLevel() != null)
             inventoryItem.setMaxStockLevel(request.getMaxStockLevel());
-        if (request.getMinStockLevel() != null && request.getMaxStockLevel() > inventoryItem.getQuantity())
-            throw new BadRequestException("Min stock level must be lower than current quantity!");
-        else
+        if (request.getMinStockLevel() != null)
             inventoryItem.setMinStockLevel(request.getMinStockLevel());
         if (request.getReorderPoint() != null)
             inventoryItem.setReorderPoint(request.getReorderPoint());
@@ -158,9 +153,9 @@ public class InventoryItemService {
         return new InventoryItemResponse(inventoryItemRepository.save(inventoryItem));
     }
 
-    private InventoryItem findItemById(Long inventoryItemId) {
-        return inventoryItemRepository.findById(inventoryItemId)
-                .orElseThrow(() -> new ResourceNotFoundException("No item found with id: " + inventoryItemId));
+    private InventoryItem findItemById(Long id) {
+        return inventoryItemRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("No item found with id: " + id));
     }
 
     private Inventory findInventoryById(Long inventoryId) {
