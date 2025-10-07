@@ -2,7 +2,6 @@ package com.e_commerce.notification_service.services;
 
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
-import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 @Service
-@Slf4j
 public class EmailService {
 
     @Autowired
@@ -63,7 +61,7 @@ public class EmailService {
             logEntry.setSentAt(Instant.now());
             notificationLogRepository.save(logEntry);
 
-            log.info("Email sent successfully to: {}", emailRequest.getTo());
+            // sent
 
         } catch (Exception e) {
             handleEmailError(logEntry, emailRequest.getTo(), e);
@@ -114,12 +112,11 @@ public class EmailService {
                 logEntry.setSentAt(Instant.now());
                 notificationLogRepository.save(logEntry);
 
-                log.info("Email sent successfully to: {} (attempt {})", emailRequest.getTo(), attempt);
+                // sent
                 return true;
 
             } catch (Exception e) {
-                log.warn("Failed to send email to: {} (attempt {}/{}): {}",
-                        emailRequest.getTo(), attempt, maxRetries, e.getMessage());
+                // attempt failed
 
                 if (attempt == maxRetries) {
                     handleEmailError(logEntry, emailRequest.getTo(), e);

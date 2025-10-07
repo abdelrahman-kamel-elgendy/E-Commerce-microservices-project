@@ -11,9 +11,6 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
 @Service
 public class EmailTemplateService {
 
