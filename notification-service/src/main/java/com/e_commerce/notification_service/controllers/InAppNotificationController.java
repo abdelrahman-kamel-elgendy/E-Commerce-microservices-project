@@ -15,7 +15,7 @@ import com.e_commerce.notification_service.models.InAppNotification;
 import com.e_commerce.notification_service.services.InAppNotificationService;
 
 @RestController
-@RequestMapping("/api/in-app")
+@RequestMapping("/api/notifications/in-app")
 public class InAppNotificationController {
 
 	@Autowired
@@ -38,5 +38,3 @@ public class InAppNotificationController {
 		return ResponseEntity.noContent().build();
 	}
 }
-
-

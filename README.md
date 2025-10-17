@@ -11,46 +11,11 @@ A modern, scalable backend E-Commerce platform built with Java Spring Boot, Post
 - **Service Discovery** - Eureka server for dynamic service registration and discovery
 - **Database Per Service** - Each microservice has its own database schema
 - **Feign Clients** - Declarative REST clients for inter-service communication
-- **Event-Driven Architecture** - Using Kafka for asynchronous communication
 - **Payment Integration** - Stripe integration for secure payment processing
 - **Inventory Management** - Real-time stock tracking with a reservation system
 - **Notification System** - Email and in-app notifications for order updates
 - **Comprehensive APIs** - RESTful APIs covering all e-commerce operations
 
-
-## 🏗️ Architecture Overview
-```
-┌─────────────────┐    ┌──────────────────┐    ┌──────────────────┐
-│   Client        │    │   API Gateway    │    │  Service Discovery│
-│   (Web/Mobile)  │──▶│   (Spring Cloud  │───▶│  (Eureka Server) │
-│                 │    │     Gateway)     │    │                  │
-└─────────────────┘    └──────────────────┘    └──────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│   Auth        │     │   User        │     │   Product     │
-│   Service     │     │   Service     │     │   Service     │
-│               │     │               │     │               │
-└───────────────┘     └───────────────┘     └───────────────┘
-        │                     │                     │
-        ▼                     ▼                     ▼
-┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│   Order       │     │   Payment     │     │   Inventory   │
-│   Service     │     │   Service     │     │   Service     │
-│               │     │               │     │               │
-└───────────────┘     └───────────────┘     └───────────────┘
-        │                     │                     │
-        └─────────────────────┼─────────────────────┘
-                              ▼
-                    ┌──────────────────┐
-                    │   Notification   │
-                    │   Service        │
-                    │   (Kafka Events) │
-                    └──────────────────┘
-
-```
 
 ## 📋 Repository Structure
 ```

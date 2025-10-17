@@ -7,30 +7,30 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class GatewayConfig {
-
         @Bean
-        public RouteLocator routes(RouteLocatorBuilder builder) {
+        public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
                 return builder.routes()
+
                                 .route("auth-service", r -> r.path("/api/auth/**")
                                                 .uri("lb://auth-service"))
 
-                                .route("user-service", r -> r.path("/api/users/**")
+                                .route("notification-service", r -> r.path("/api/notification/**")
+                                                .uri("lb://notification-service"))
+
+                                .route("user-service", r -> r.path("/api/user/**")
                                                 .uri("lb://user-service"))
 
-                                .route("product-service", r -> r.path("/api/products/**")
-                                                .uri("lb://product-service"))
+                                .route("cart-service", r -> r.path("/api/cart/**")
+                                                .uri("lb://cart-service"))
 
-                                .route("order-service", r -> r.path("/api/orders/**")
+                                .route("order-service", r -> r.path("/api/order/**")
                                                 .uri("lb://order-service"))
 
-                                .route("payment-service", r -> r.path("/api/payments/**")
-                                                .uri("lb://payment-service"))
+                                .route("product-service", r -> r.path("/api/product/**")
+                                                .uri("lb://product-service"))
 
                                 .route("inventory-service", r -> r.path("/api/inventory/**")
                                                 .uri("lb://inventory-service"))
-
-                                .route("notification-service", r -> r.path("/api/notifications/**")
-                                                .uri("lb://notification-service"))
 
                                 .build();
         }
