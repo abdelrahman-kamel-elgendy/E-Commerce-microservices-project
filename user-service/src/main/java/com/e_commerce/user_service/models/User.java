@@ -1,4 +1,4 @@
-package com.e_commerce.auth_service.models;
+package com.e_commerce.user_service.models;
 
 import java.time.Instant;
 import java.util.ArrayList;

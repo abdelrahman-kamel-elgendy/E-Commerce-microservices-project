@@ -3,9 +3,10 @@ package com.e_commerce.auth_service.controllers;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +17,7 @@ import com.e_commerce.auth_service.dto.request.RegisterUser;
 import com.e_commerce.auth_service.dto.request.ResetPasswordRequest;
 import com.e_commerce.auth_service.dto.response.AuthResponse;
 import com.e_commerce.auth_service.dto.response.NotificationResponse;
+import com.e_commerce.auth_service.dto.response.UserDetailsResponse;
 import com.e_commerce.auth_service.dto.response.UserResponse;
 import com.e_commerce.auth_service.services.AuthService;
 
@@ -32,7 +34,7 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(@Valid @RequestBody RegisterUser registerUser) {
-        return ResponseEntity.ok(authService.registerUser(registerUser));
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.registerUser(registerUser));
     }
 
     @PostMapping("/verify-email")
@@ -74,14 +76,24 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Account unlocked successfully"));
     }
 
-    @GetMapping("/me")
-    public ResponseEntity<UserResponse> me() {
-        return ResponseEntity.ok(authService.getCurrentUser());
-    }
-
     @PostMapping("/resend-verification")
     public ResponseEntity<?> resendVerification(@RequestParam String email) {
         authService.resendVerification(email);
         return ResponseEntity.ok(Map.of("message", "Verification email sent if account exists and is not verified"));
+    }
+
+    @GetMapping("/validate-token")
+    boolean validateToken(@RequestParam String token) {
+        return authService.validateToken(token);
+    }
+
+    @PostMapping("/generate-verification-url")
+    String generateVerificationUrl(@RequestParam String email) {
+        return authService.generateVerificationUrl(email);
+    }
+
+    @GetMapping("/user-details")
+    UserDetailsResponse getUserDetails(@RequestParam String token) {
+        return authService.getUserDetailsFromToken(token);
     }
 }

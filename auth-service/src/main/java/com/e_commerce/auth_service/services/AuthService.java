@@ -13,6 +13,7 @@ import com.e_commerce.auth_service.dto.request.RegisterUser;
 import com.e_commerce.auth_service.dto.request.ResetPasswordRequest;
 import com.e_commerce.auth_service.dto.response.AuthResponse;
 import com.e_commerce.auth_service.dto.response.NotificationResponse;
+import com.e_commerce.auth_service.dto.response.UserDetailsResponse;
 import com.e_commerce.auth_service.dto.response.UserResponse;
 import com.e_commerce.auth_service.exceptions.InvalidCredentialsException;
 import com.e_commerce.auth_service.exceptions.InvalidTokenException;
@@ -54,6 +55,9 @@ public class AuthService {
 
     @Autowired
     private LoginAttemptService loginAttemptService;
+
+    @Autowired
+    private TokenBlacklistService tokenBlacklistService;
 
     @Value("${app.security.password-reset.reset-url}")
     private String passwordResetUrl;
@@ -131,26 +135,14 @@ public class AuthService {
         return new AuthResponse(accessToken, session);
     }
 
-    public UserResponse getCurrentUser() {
-        String token = jwtTokenProvider.resolveToken(this.request);
-        if (token == null || !jwtTokenProvider.validateToken(token)) {
-            throw new InvalidTokenException("Invalid token");
-        }
-        String username = jwtTokenProvider.getUsernameFromToken(token);
-        User user = userRepository.findByEmail(username).orElseThrow(() -> new UserNotFoundException("User not found"));
-        return new UserResponse(user);
-    }
-
     public void resendVerification(String email) {
         User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found"));
-        if (user.isEnabled()) {
-            // already verified
+        if (user.isEnabled())
             return;
-        }
-        String token = jwtTokenProvider.generateVerificationToken(user.getEmail());
-        // construct verification URL from property
-        String verificationLink = verifyUrl + "?token=" + token;
-        notificationClient.sendEmailVerification(user.getEmail(), user.getFirstName(), verificationLink);
+
+        notificationClient.sendEmailVerification(
+                user.getEmail(), user.getFirstName(),
+                this.generateVerificationUrl(user.getEmail()));
     }
 
     public UserResponse registerUser(RegisterUser registerUser) {
@@ -162,12 +154,13 @@ public class AuthService {
                 passwordEncoder.encode(registerUser.getPassword()),
                 registerUser.getFirstName(),
                 registerUser.getLastName());
-        user.setEnabled(false);
         user = userRepository.save(user);
 
         // send verification email
-        String token = jwtTokenProvider.generateVerificationToken(user.getEmail());
-        notificationClient.sendEmailVerification(user.getEmail(), user.getFirstName(), verifyUrl + "?token=" + token);
+        notificationClient.sendEmailVerification(
+                user.getEmail(),
+                user.getFirstName(),
+                this.generateVerificationUrl(user.getEmail()));
         return new UserResponse(user);
     }
 
@@ -187,7 +180,13 @@ public class AuthService {
     public void logout() {
         String token = jwtTokenProvider.resolveToken(request);
         if (token != null && jwtTokenProvider.validateToken(token)) {
+
+            Long userId = jwtTokenProvider.getUserIdFromToken(token);
             Long sessionId = jwtTokenProvider.getSessionIdFromToken(token);
+
+            tokenBlacklistService.blacklistToken(token, userId, sessionId, "USER_LOGOUT");
+
+            // Update session status
             userSessionRepository.findBySessionIdAndActiveTrue(sessionId)
                     .ifPresent(session -> {
                         session.logout();
@@ -236,16 +235,6 @@ public class AuthService {
         userRepository.save(user);
     }
 
-    // public User getCurrentUser() {
-    // String token = jwtTokenProvider.resolveToken(request);
-    // if (token == null || !jwtTokenProvider.validateToken(token))
-    // throw new InvalidTokenException("Invalid or expired token");
-
-    // String email = jwtTokenProvider.getUsernameFromToken(token);
-    // return userRepository.findByEmail(email)
-    // .orElseThrow(() -> new UserNotFoundException("User not found"));
-    // }
-
     private UserSession createUserSession(User user) {
         String ipAddress = getClientIpAddress();
         String userAgent = request.getHeader("User-Agent");
@@ -253,6 +242,34 @@ public class AuthService {
 
         UserSession userSession = new UserSession(user, expiredAt, ipAddress, userAgent);
         return userSessionRepository.save(userSession);
+    }
+
+    public boolean validateToken(String token) {
+        return jwtTokenProvider.validateToken(token);
+    }
+
+    public String generateVerificationUrl(String email) {
+        return verifyUrl + "?token=" + jwtTokenProvider.generateVerificationToken(email);
+    }
+
+    public String getUserEmailFromToken(String token) {
+        if (!jwtTokenProvider.validateToken(token))
+            throw new InvalidTokenException("Invalid or expired token");
+        return jwtTokenProvider.getUsernameFromToken(token);
+    }
+
+    public UserDetailsResponse getUserDetailsFromToken(String token) {
+        if (!jwtTokenProvider.validateToken(token))
+            throw new InvalidTokenException("Invalid or expired token");
+
+        String email = jwtTokenProvider.getUsernameFromToken(token);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        return new UserDetailsResponse(
+                user.getEmail(),
+                user.getFirstName(),
+                user.getRoles().stream().map(Enum::name).toList());
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)

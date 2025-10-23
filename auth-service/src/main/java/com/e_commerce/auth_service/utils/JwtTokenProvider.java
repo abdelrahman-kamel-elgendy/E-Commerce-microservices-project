@@ -5,11 +5,15 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import com.e_commerce.auth_service.exceptions.InvalidTokenException;
 import com.e_commerce.auth_service.exceptions.TokenExpiredException;
+import com.e_commerce.auth_service.services.TokenBlacklistService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import javax.crypto.SecretKey;
@@ -30,6 +34,10 @@ public class JwtTokenProvider {
 
     @Value("${app.jwt.reset-expiration}")
     private long jwtResetExpiration;
+
+    @Autowired
+    @Lazy
+    private TokenBlacklistService tokenBlacklistService;
 
     private SecretKey getSigningKey() {
         byte[] keyBytes = jwtSecret.getBytes(StandardCharsets.UTF_8);
@@ -101,9 +109,29 @@ public class JwtTokenProvider {
                 .compact();
     }
 
+    public boolean validateToken(String token) {
+
+        try {
+            if (tokenBlacklistService.isTokenBlacklisted(token))
+                return false;
+
+            parseClaims(token);
+            return true;
+        } catch (TokenExpiredException ex) {
+            throw ex;
+        } catch (InvalidTokenException ex) {
+            throw ex;
+        }
+    }
+
     public String getUsernameFromToken(String token) {
         Claims claims = parseClaims(token);
         return claims.getSubject();
+    }
+
+    public Long getUserIdFromToken(String token) {
+        Claims claims = parseClaims(token);
+        return claims.get("userId", Long.class);
     }
 
     public Long getSessionIdFromToken(String token) {
@@ -115,31 +143,6 @@ public class JwtTokenProvider {
         return null;
     }
 
-    private Claims parseClaims(String token) {
-        try {
-            Jws<Claims> jws = Jwts.parserBuilder()
-                    .setSigningKey(getSigningKey())
-                    .build()
-                    .parseClaimsJws(token);
-            return jws.getBody();
-        } catch (ExpiredJwtException ex) {
-            throw new TokenExpiredException("Expired JWT token");
-        } catch (Exception ex) {
-            throw new InvalidTokenException("Invalid JWT token");
-        }
-    }
-
-    public boolean validateToken(String token) {
-        try {
-            parseClaims(token);
-            return true;
-        } catch (TokenExpiredException ex) {
-            throw ex;
-        } catch (InvalidTokenException ex) {
-            throw ex;
-        }
-    }
-
     public String resolveToken(HttpServletRequest req) {
         String bearerToken = req.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
@@ -148,7 +151,6 @@ public class JwtTokenProvider {
         return null;
     }
 
-    // Additional utility methods
     public Date getExpirationDateFromToken(String token) {
         Claims claims = parseClaims(token);
         return claims.getExpiration();
@@ -175,6 +177,20 @@ public class JwtTokenProvider {
         Claims claims = parseClaims(token);
         Object p = claims.get("purpose");
         return p == null ? null : p.toString();
+    }
+
+    private Claims parseClaims(String token) {
+        try {
+            Jws<Claims> jws = Jwts.parserBuilder()
+                    .setSigningKey(getSigningKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return jws.getBody();
+        } catch (ExpiredJwtException ex) {
+            throw new TokenExpiredException("Expired JWT token");
+        } catch (Exception ex) {
+            throw new InvalidTokenException("Invalid JWT token");
+        }
     }
 
 }
